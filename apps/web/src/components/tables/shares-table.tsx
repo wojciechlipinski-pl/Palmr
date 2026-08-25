@@ -277,7 +277,7 @@ export function SharesTable({
               <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.recipients")}
               </TableHead>
-              <TableHead className="sticky right-0 z-20 h-10 w-[70px] text-xs font-bold text-muted-foreground bg-muted px-4 rounded-tr-lg border-l diag-marker-v2">
+              <TableHead className="sticky right-0 z-20 h-10 w-[70px] text-xs font-bold text-muted-foreground bg-muted px-4 rounded-tr-lg border-l">
                 {t("sharesTable.columns.actions")}
               </TableHead>
             </TableRow>
