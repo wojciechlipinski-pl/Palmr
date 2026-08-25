@@ -435,7 +435,9 @@ export function SharesTable({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell h-12 px-4">{format(new Date(share.createdAt), "MM/dd/yyyy HH:mm")}</TableCell>
+                  <TableCell className="hidden lg:table-cell h-12 px-4">
+                    {format(new Date(share.createdAt), "MM/dd/yyyy HH:mm")}
+                  </TableCell>
                   <TableCell className="h-12 px-4">
                     <div
                       className="flex items-center gap-1 min-w-0"
