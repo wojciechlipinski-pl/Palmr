@@ -256,16 +256,16 @@ export function SharesTable({
               <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.name")}
               </TableHead>
-              <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
+              <TableHead className="hidden lg:table-cell h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.description")}
               </TableHead>
-              <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
+              <TableHead className="hidden lg:table-cell h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.createdAt")}
               </TableHead>
               <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.expiresAt")}
               </TableHead>
-              <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
+              <TableHead className="hidden lg:table-cell h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.status")}
               </TableHead>
               <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
@@ -277,7 +277,7 @@ export function SharesTable({
               <TableHead className="h-10 text-xs font-bold text-muted-foreground bg-muted/50 px-4">
                 {t("sharesTable.columns.recipients")}
               </TableHead>
-              <TableHead className="h-10 w-[70px] text-xs font-bold text-muted-foreground bg-muted/50 px-4 rounded-tr-lg">
+              <TableHead className="sticky right-0 z-20 h-10 w-[70px] text-xs font-bold text-muted-foreground bg-muted px-4 rounded-tr-lg border-l">
                 {t("sharesTable.columns.actions")}
               </TableHead>
             </TableRow>
@@ -297,7 +297,7 @@ export function SharesTable({
               const displayDescription = getDisplayValue(share, "description");
 
               return (
-                <TableRow key={share.id} className="hover:bg-muted/50 transition-colors border-0">
+                <TableRow key={share.id} className="hover:bg-muted/50 transition-colors border-0 group">
                   <TableCell className="h-12 px-4 border-0">
                     <Checkbox
                       checked={isSelected}
@@ -368,7 +368,7 @@ export function SharesTable({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="h-12 px-4">
+                  <TableCell className="hidden lg:table-cell h-12 px-4">
                     <div
                       className="flex items-center gap-1 min-w-0"
                       onMouseEnter={() => setHoveredField({ shareId: share.id, field: "description" })}
@@ -435,7 +435,7 @@ export function SharesTable({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="h-12 px-4">{format(new Date(share.createdAt), "MM/dd/yyyy HH:mm")}</TableCell>
+                  <TableCell className="hidden lg:table-cell h-12 px-4">{format(new Date(share.createdAt), "MM/dd/yyyy HH:mm")}</TableCell>
                   <TableCell className="h-12 px-4">
                     <div
                       className="flex items-center gap-1 min-w-0"
@@ -464,7 +464,7 @@ export function SharesTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="h-12 px-4">
+                  <TableCell className="hidden lg:table-cell h-12 px-4">
                     <Badge
                       variant="secondary"
                       className={
@@ -573,7 +573,7 @@ export function SharesTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="h-12 px-4 text-right">
+                  <TableCell className="sticky right-0 z-10 h-12 px-4 text-right bg-background group-hover:bg-muted/50 border-l">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted cursor-pointer">
