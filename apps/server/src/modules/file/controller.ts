@@ -198,6 +198,75 @@ export class FileController {
     }
   }
 
+  /**
+   * Determines whether a file may be accessed via a password (or public) share.
+   *
+   * Historically this only checked shares linked directly to the file
+   * (Share.files). Files that are only reachable through a *shared folder*
+   * (Share.folders) were never matched, so downloads of files inside a
+   * password-protected shared folder always fell through to the
+   * owner-only JWT check and returned 401 — even with the correct
+   * password. This walks the file's folder ancestry and also checks
+   * folder-based shares.
+   */
+  private async hasShareAccess(
+    fileRecord: { id: string; folderId: string | null },
+    password?: string
+  ): Promise<boolean> {
+    const directShares = await prisma.share.findMany({
+      where: {
+        files: {
+          some: {
+            id: fileRecord.id,
+          },
+        },
+      },
+      include: {
+        security: true,
+      },
+    });
+
+    for (const share of directShares) {
+      if (!share.security.password) return true;
+      if (password && (await bcrypt.compare(password, share.security.password))) return true;
+    }
+
+    // Fall back to shares of an ancestor folder (folder shares don't
+    // populate Share.files for the files they contain).
+    const ancestorFolderIds: string[] = [];
+    let currentFolderId = fileRecord.folderId;
+    while (currentFolderId) {
+      ancestorFolderIds.push(currentFolderId);
+      const folder = await prisma.folder.findUnique({
+        where: { id: currentFolderId },
+        select: { parentId: true },
+      });
+      currentFolderId = folder?.parentId ?? null;
+    }
+
+    if (ancestorFolderIds.length === 0) return false;
+
+    const folderShares = await prisma.share.findMany({
+      where: {
+        folders: {
+          some: {
+            id: { in: ancestorFolderIds },
+          },
+        },
+      },
+      include: {
+        security: true,
+      },
+    });
+
+    for (const share of folderShares) {
+      if (!share.security.password) return true;
+      if (password && (await bcrypt.compare(password, share.security.password))) return true;
+    }
+
+    return false;
+  }
+
   async getDownloadUrl(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { objectName, password } = request.query as {
@@ -215,33 +284,7 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = false;
-
-      const shares = await prisma.share.findMany({
-        where: {
-          files: {
-            some: {
-              id: fileRecord.id,
-            },
-          },
-        },
-        include: {
-          security: true,
-        },
-      });
-
-      for (const share of shares) {
-        if (!share.security.password) {
-          hasAccess = true;
-          break;
-        } else if (password) {
-          const isPasswordValid = await bcrypt.compare(password, share.security.password);
-          if (isPasswordValid) {
-            hasAccess = true;
-            break;
-          }
-        }
-      }
+      let hasAccess = await this.hasShareAccess(fileRecord, password);
 
       if (!hasAccess) {
         try {
@@ -321,33 +364,7 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = false;
-
-      const shares = await prisma.share.findMany({
-        where: {
-          files: {
-            some: {
-              id: fileRecord.id,
-            },
-          },
-        },
-        include: {
-          security: true,
-        },
-      });
-
-      for (const share of shares) {
-        if (!share.security.password) {
-          hasAccess = true;
-          break;
-        } else if (password) {
-          const isPasswordValid = await bcrypt.compare(password, share.security.password);
-          if (isPasswordValid) {
-            hasAccess = true;
-            break;
-          }
-        }
-      }
+      let hasAccess = await this.hasShareAccess(fileRecord, password);
 
       if (!hasAccess) {
         try {
