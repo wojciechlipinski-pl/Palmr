@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
   const apiRes = await fetch(url, {
     method: "GET",
     headers: {
-      cookie: cookieHeader || "", "x-share-password": req.headers.get("x-share-password") || "",
+    cookie: cookieHeader || "",
+      "x-share-password": req.headers.get("x-share-password") || "",
     },
   });
 
