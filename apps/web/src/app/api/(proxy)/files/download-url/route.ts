@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     method: "GET",
     headers: {
       cookie: cookieHeader || "",
+      "x-share-password": req.headers.get("x-share-password") || "",
     },
   });
 
