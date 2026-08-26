@@ -212,6 +212,9 @@ export function useEnhancedFileManager(
       await deleteFile(fileId);
       toast.success(t("files.deleteSuccess"));
       setFileToDelete(null);
+      if (!handleImmediateUpdate) {
+        await onRefresh();
+      }
     } catch (error) {
       console.error("Failed to delete file:", error);
       toast.error(t("files.deleteError"));
@@ -376,6 +379,9 @@ export function useEnhancedFileManager(
       toast.success(t("files.bulkDeleteSuccess", { count: totalCount }));
       setFilesToDelete(null);
       setFoldersToDelete(null);
+      if (!handleImmediateUpdate) {
+        await onRefresh();
+      }
     } catch (error) {
       console.error("Failed to delete items:", error);
       toast.error(t("files.bulkDeleteError"));
@@ -425,6 +431,9 @@ export function useEnhancedFileManager(
       setFolderToDelete(null);
       if (clearSelectionCallback) {
         clearSelectionCallback();
+      }
+      if (!handleImmediateUpdate) {
+        await onRefresh();
       }
     } catch (error) {
       console.error("Error deleting folder:", error);
