@@ -284,7 +284,7 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = await this.hasShareAccess(fileRecord, password);
+      let hasAccess = await this.hasShareAccess(fileRecord, password || (Array.isArray(request.headers["x-share-password"]) ? request.headers["x-share-password"][0] : request.headers["x-share-password"]));
 
       if (!hasAccess) {
         try {
@@ -364,7 +364,7 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = await this.hasShareAccess(fileRecord, password);
+      let hasAccess = await this.hasShareAccess(fileRecord, password || (Array.isArray(request.headers["x-share-password"]) ? request.headers["x-share-password"][0] : request.headers["x-share-password"]));
 
       if (!hasAccess) {
         try {
