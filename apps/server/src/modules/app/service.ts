@@ -1,8 +1,42 @@
 import { prisma } from "../../shared/prisma";
 import { ConfigService } from "../config/service";
 
+const SHARE_AUTO_DELETE_KEYS = [
+  "shareAutoDeleteGraceDays",
+  "shareAutoDeleteFirstWarningDays",
+  "shareAutoDeleteSecondWarningDays",
+];
+
 export class AppService {
   private configService = new ConfigService();
+
+  // Ensures secondWarningDays < firstWarningDays < graceDays, so the two staged
+  // warning emails always land before the deletion deadline and in the right order.
+  // `overrides` carries only the keys being changed in this request; any key not
+  // present falls back to its currently-stored value.
+  private async validateShareAutoDeleteConfig(overrides: Record<string, string>) {
+    const resolve = async (key: string) => {
+      if (overrides[key] !== undefined) return Number(overrides[key]);
+      const config = await prisma.appConfig.findUnique({ where: { key } });
+      return config ? Number(config.value) : NaN;
+    };
+
+    const [graceDays, firstWarningDays, secondWarningDays] = await Promise.all([
+      resolve("shareAutoDeleteGraceDays"),
+      resolve("shareAutoDeleteFirstWarningDays"),
+      resolve("shareAutoDeleteSecondWarningDays"),
+    ]);
+
+    if ([graceDays, firstWarningDays, secondWarningDays].some((n) => Number.isNaN(n) || n < 0)) {
+      throw new Error("Share auto-delete periods must be non-negative numbers");
+    }
+
+    if (!(secondWarningDays < firstWarningDays && firstWarningDays < graceDays)) {
+      throw new Error(
+        "Invalid share auto-delete periods: the second warning must be sooner than the first warning, and the first warning must be sooner than the deletion grace period"
+      );
+    }
+  }
 
   async getAppInfo() {
     const [appName, appDescription, appLogo, firstUserAccess] = await Promise.all([
@@ -80,6 +114,10 @@ export class AppService {
       }
     }
 
+    if (SHARE_AUTO_DELETE_KEYS.includes(key)) {
+      await this.validateShareAutoDeleteConfig({ [key]: value });
+    }
+
     const config = await prisma.appConfig.findUnique({
       where: { key },
     });
@@ -106,6 +144,15 @@ export class AppService {
           "Password authentication cannot be disabled. At least one authentication provider must be active."
         );
       }
+    }
+
+    const shareAutoDeleteUpdates = updates.filter((update) => SHARE_AUTO_DELETE_KEYS.includes(update.key));
+    if (shareAutoDeleteUpdates.length > 0) {
+      const overrides = shareAutoDeleteUpdates.reduce(
+        (acc, update) => ({ ...acc, [update.key]: update.value }),
+        {} as Record<string, string>
+      );
+      await this.validateShareAutoDeleteConfig(overrides);
     }
 
     const keys = updates.map((update) => update.key);

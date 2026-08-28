@@ -54,6 +54,30 @@ const defaultConfigs = [
     type: "bigint",
     group: "storage",
   },
+  {
+    key: "shareAutoDeleteEnabled",
+    value: "false",
+    type: "boolean",
+    group: "storage",
+  },
+  {
+    key: "shareAutoDeleteGraceDays",
+    value: "21",
+    type: "number",
+    group: "storage",
+  },
+  {
+    key: "shareAutoDeleteFirstWarningDays",
+    value: "14",
+    type: "number",
+    group: "storage",
+  },
+  {
+    key: "shareAutoDeleteSecondWarningDays",
+    value: "3",
+    type: "number",
+    group: "storage",
+  },
   // Security Configurations
   {
     key: "jwtSecret",

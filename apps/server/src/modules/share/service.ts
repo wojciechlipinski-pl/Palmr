@@ -143,7 +143,18 @@ export class ShareService {
       }
     }
 
-    await this.shareRepository.incrementViews(shareId);
+    const incrementedShare = await this.shareRepository.incrementViews(shareId);
+
+    // Record the moment the view limit is first reached, so the expiration
+    // cleanup service can count the auto-delete grace period from a fixed
+    // point in time instead of "whenever the cleanup job happens to run".
+    if (
+      share.security?.maxViews &&
+      incrementedShare.views >= share.security.maxViews &&
+      !share.maxViewsReachedAt
+    ) {
+      await this.shareRepository.updateShare(shareId, { maxViewsReachedAt: new Date() });
+    }
 
     const updatedShare = await this.shareRepository.findShareById(shareId);
     return ShareResponseSchema.parse(await this.formatShareResponse(updatedShare));

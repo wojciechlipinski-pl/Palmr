@@ -7,6 +7,7 @@ import { directoriesConfig } from "./config/directories.config";
 import { appRoutes } from "./modules/app/routes";
 import { authProvidersRoutes } from "./modules/auth-providers/routes";
 import { authRoutes } from "./modules/auth/routes";
+import { ExpirationCleanupService } from "./modules/expiration-cleanup/service";
 import { fileRoutes } from "./modules/file/routes";
 import { folderRoutes } from "./modules/folder/routes";
 import { healthRoutes } from "./modules/health/routes";
@@ -89,6 +90,11 @@ async function startServer() {
   });
 
   console.log(`🌴 Palmr server running on port 3333`);
+
+  const expirationCleanupService = new ExpirationCleanupService();
+  await expirationCleanupService.ensureDefaultConfigs();
+  expirationCleanupService.start();
+  console.log("🧹 Expiration cleanup service started (hourly, disabled unless enabled in Settings > Storage)");
 
   // Cleanup on shutdown
   process.on("SIGINT", () => process.exit(0));

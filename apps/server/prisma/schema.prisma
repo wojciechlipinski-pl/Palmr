@@ -71,6 +71,13 @@ model Share {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Auto-delete tracking: when the max-views limit was first reached, and when
+  // each staged deletion-warning email was sent. Used by the expiration cleanup
+  // service; expiration-based deletion instead reads `expiration` directly.
+  maxViewsReachedAt           DateTime?
+  deletionWarningFirstSentAt  DateTime?
+  deletionWarningSecondSentAt DateTime?
+
   creatorId String?
   creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
 
@@ -226,6 +233,11 @@ model ReverseShare {
   emailFieldRequired FieldRequirement @default(OPTIONAL)
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
+
+  // Auto-delete tracking, mirrors Share's warning fields (reverse shares only
+  // ever expire, there is no view-limit trigger for them).
+  deletionWarningFirstSentAt  DateTime?
+  deletionWarningSecondSentAt DateTime?
 
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
