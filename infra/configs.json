@@ -9,7 +9,11 @@
   ],
   "storage": [
     "maxFileSize",
-    "maxTotalStoragePerUser"
+    "maxTotalStoragePerUser",
+    "shareAutoDeleteEnabled",
+    "shareAutoDeleteGraceDays",
+    "shareAutoDeleteFirstWarningDays",
+    "shareAutoDeleteSecondWarningDays"
   ],
   "security": [
     "jwtSecret",
