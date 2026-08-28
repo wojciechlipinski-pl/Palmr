@@ -1358,6 +1358,22 @@
         "title": "Maximum Storage Per User",
         "description": "Total storage limit per user"
       },
+      "shareAutoDeleteEnabled": {
+        "title": "Auto-Delete Expired Shares",
+        "description": "Automatically delete shares (and their files, when not shared elsewhere) after they expire or reach their view limit"
+      },
+      "shareAutoDeleteGraceDays": {
+        "title": "Deletion Grace Period (Days)",
+        "description": "How many days after expiration (or reaching the view limit) a share is kept before it is permanently deleted"
+      },
+      "shareAutoDeleteFirstWarningDays": {
+        "title": "First Warning Email (Days Before Deletion)",
+        "description": "How many days before deletion to send the creator the first warning email"
+      },
+      "shareAutoDeleteSecondWarningDays": {
+        "title": "Second Warning Email (Days Before Deletion)",
+        "description": "How many days before deletion to send the creator a final warning email. Must be sooner than the first warning"
+      },
       "firstUserAccess": {
         "title": "First User Access",
         "description": "Settings for first access of new users"

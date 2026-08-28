@@ -1285,6 +1285,22 @@
         "title": "Maksymalna pojemność na użytkownika",
         "description": "Całkowity limit pojemności na użytkownika"
       },
+      "shareAutoDeleteEnabled": {
+        "title": "Automatyczne usuwanie wygasłych udostępnień",
+        "description": "Automatycznie usuwaj udostępnienia (oraz ich pliki, jeśli nie są udostępnione gdzie indziej) po ich wygaśnięciu lub osiągnięciu limitu wyświetleń"
+      },
+      "shareAutoDeleteGraceDays": {
+        "title": "Okres karencji przed usunięciem (dni)",
+        "description": "Po ilu dniach od wygaśnięcia (lub osiągnięcia limitu wyświetleń) udostępnienie zostanie trwale usunięte"
+      },
+      "shareAutoDeleteFirstWarningDays": {
+        "title": "Pierwsze powiadomienie e-mail (dni przed usunięciem)",
+        "description": "Ile dni przed usunięciem wysłać do twórcy pierwsze powiadomienie e-mail"
+      },
+      "shareAutoDeleteSecondWarningDays": {
+        "title": "Drugie powiadomienie e-mail (dni przed usunięciem)",
+        "description": "Ile dni przed usunięciem wysłać do twórcy ostatnie powiadomienie e-mail. Musi być wcześniejsze niż pierwsze powiadomienie"
+      },
       "firstUserAccess": {
         "title": "Pierwszy dostęp użytkownika",
         "description": "Ustawienia pierwszego dostępu nowych użytkowników"
