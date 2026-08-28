@@ -63,6 +63,10 @@ export const createFieldDescriptions = (t: ReturnType<typeof createTranslator>) 
   // Storage settings
   maxFileSize: t("settings.fields.maxFileSize.description"),
   maxTotalStoragePerUser: t("settings.fields.maxTotalStoragePerUser.description"),
+  shareAutoDeleteEnabled: t("settings.fields.shareAutoDeleteEnabled.description"),
+  shareAutoDeleteGraceDays: t("settings.fields.shareAutoDeleteGraceDays.description"),
+  shareAutoDeleteFirstWarningDays: t("settings.fields.shareAutoDeleteFirstWarningDays.description"),
+  shareAutoDeleteSecondWarningDays: t("settings.fields.shareAutoDeleteSecondWarningDays.description"),
 });
 
 export const createFieldTitles = (t: ReturnType<typeof createTranslator>) => ({
@@ -99,4 +103,8 @@ export const createFieldTitles = (t: ReturnType<typeof createTranslator>) => ({
   // Storage settings
   maxFileSize: t("settings.fields.maxFileSize.title"),
   maxTotalStoragePerUser: t("settings.fields.maxTotalStoragePerUser.title"),
+  shareAutoDeleteEnabled: t("settings.fields.shareAutoDeleteEnabled.title"),
+  shareAutoDeleteGraceDays: t("settings.fields.shareAutoDeleteGraceDays.title"),
+  shareAutoDeleteFirstWarningDays: t("settings.fields.shareAutoDeleteFirstWarningDays.title"),
+  shareAutoDeleteSecondWarningDays: t("settings.fields.shareAutoDeleteSecondWarningDays.title"),
 });
