@@ -224,6 +224,31 @@ export async function appRoutes(app: FastifyInstance) {
   );
 
   app.post(
+    "/app/email-templates/share-notification/test",
+    {
+      preValidation: adminPreValidation,
+      schema: {
+        tags: ["App"],
+        operationId: "testShareNotificationEmailTemplate",
+        summary: "Send a test 'file shared with you' email",
+        description:
+          "Sends a sample 'file shared with you' notification to the requesting admin's own email address, rendered from the provided draft subject/body. An empty subject or body falls back to the currently saved template, and then to the built-in default. Requires admin privileges.",
+        body: z.object({
+          subject: z.string().optional().describe("Draft subject line to preview (falls back when omitted)"),
+          body: z.string().optional().describe("Draft HTML body to preview (falls back when omitted)"),
+        }),
+        response: {
+          200: z.object({ message: z.string().describe("Success message") }),
+          400: z.object({ error: z.string().describe("Error message") }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    appController.testShareNotificationEmailTemplate.bind(appController)
+  );
+
+  app.post(
     "/app/logo",
     {
       preValidation: adminPreValidation,

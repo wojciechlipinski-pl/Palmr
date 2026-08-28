@@ -165,6 +165,18 @@ const defaultConfigs = [
     group: "email",
   },
   {
+    key: "shareNotificationEmailSubject",
+    value: "",
+    type: "string",
+    group: "email",
+  },
+  {
+    key: "shareNotificationEmailBody",
+    value: "",
+    type: "string",
+    group: "email",
+  },
+  {
     key: "passwordResetTokenExpiration",
     value: "3600",
     type: "number",

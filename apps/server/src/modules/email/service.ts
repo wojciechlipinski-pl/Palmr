@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 
 import { ConfigService } from "../config/service";
+import { renderTemplate } from "./template";
 
 interface SmtpConfig {
   smtpEnabled: string;
@@ -167,24 +168,12 @@ export class EmailService {
     });
   }
 
-  async sendShareNotification(to: string, shareLink: string, shareName?: string, senderName?: string) {
-    const transporter = await this.createTransporter();
-    if (!transporter) {
-      throw new Error("SMTP is not enabled");
-    }
+  private defaultShareNotificationSubject(appName: string, shareTitle: string) {
+    return `${appName} - ${shareTitle} shared with you`;
+  }
 
-    const fromName = await this.configService.getValue("smtpFromName");
-    const fromEmail = await this.configService.getValue("smtpFromEmail");
-    const appName = await this.configService.getValue("appName");
-
-    const shareTitle = shareName || "Files";
-    const sender = senderName || "Someone";
-
-    await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject: `${appName} - ${shareTitle} shared with you`,
-      html: `
+  private defaultShareNotificationHtml(appName: string, sender: string, shareTitle: string, shareLink: string) {
+    return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -199,7 +188,7 @@ export class EmailService {
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">${appName}</h1>
               <p style="margin: 2px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Shared Files</p>
             </div>
-            
+
             <!-- Content -->
             <div style="padding: 40px 30px;">
               <div style="text-align: center; margin-bottom: 32px;">
@@ -208,14 +197,14 @@ export class EmailService {
                   <strong style="color: #374151;">${sender}</strong> has shared <strong style="color: #374151;">"${shareTitle}"</strong> with you.
                 </p>
               </div>
-              
+
               <!-- CTA Button -->
               <div style="text-align: center; margin: 32px 0;">
                 <a href="${shareLink}" style="display: inline-block; background-color: #22B14C; color: #ffffff; text-decoration: none; padding: 12px 24px; font-weight: 600; font-size: 16px; border: 2px solid #22B14C; border-radius: 8px; transition: all 0.3s ease;">
                   Access Shared Files
                 </a>
               </div>
-              
+
               <!-- Info Box -->
               <div style="background-color: #f9fafb; border-left: 4px solid #22B14C; padding: 16px 20px; margin-top: 32px;">
                 <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">
@@ -223,7 +212,7 @@ export class EmailService {
                 </p>
               </div>
             </div>
-            
+
             <!-- Footer -->
             <div style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0; color: #6b7280; font-size: 14px;">
@@ -239,7 +228,85 @@ export class EmailService {
           </div>
         </body>
         </html>
-      `,
+      `;
+  }
+
+  /**
+   * Sends the "a file was shared with you" notification.
+   *
+   * `templateOverride` lets callers (the admin "send test email" action) preview an
+   * unsaved draft subject/body instead of reading the persisted `shareNotificationEmail*`
+   * config values. Normal share notifications omit it and use the saved config, which
+   * falls back to the built-in default template (unchanged) when left empty.
+   */
+  async sendShareNotification(params: {
+    to: string;
+    shareLink: string;
+    shareName?: string;
+    senderName?: string;
+    senderEmail?: string;
+    expiration?: Date | null;
+    message?: string;
+    fileCount?: number;
+    templateOverride?: { subject?: string; body?: string };
+  }) {
+    const { to, shareLink, shareName, senderName, senderEmail, expiration, message, fileCount, templateOverride } =
+      params;
+
+    const transporter = await this.createTransporter();
+    if (!transporter) {
+      throw new Error("SMTP is not enabled");
+    }
+
+    const fromName = await this.configService.getValue("smtpFromName");
+    const fromEmail = await this.configService.getValue("smtpFromEmail");
+    const appName = await this.configService.getValue("appName");
+
+    const shareTitle = shareName || "Files";
+    const sender = senderName || "Someone";
+
+    let customSubject = templateOverride?.subject ?? "";
+    let customBody = templateOverride?.body ?? "";
+
+    if (!templateOverride) {
+      customSubject = await this.configService.getValue("shareNotificationEmailSubject").catch(() => "");
+      customBody = await this.configService.getValue("shareNotificationEmailBody").catch(() => "");
+    }
+
+    const defaultSubject = this.defaultShareNotificationSubject(appName, shareTitle);
+    const defaultHtml = this.defaultShareNotificationHtml(appName, sender, shareTitle, shareLink);
+
+    let subject = defaultSubject;
+    let html = defaultHtml;
+
+    if (customSubject.trim() || customBody.trim()) {
+      const placeholderValues: Record<string, string> = {
+        fileName: shareTitle,
+        fileCount: String(fileCount ?? 0),
+        senderName: sender,
+        senderEmail: senderEmail || "",
+        recipientEmail: to,
+        expiryDate: expiration
+          ? expiration.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+          : "No expiration date",
+        downloadLink: shareLink,
+        message: message || "",
+        appName,
+      };
+
+      if (customSubject.trim()) {
+        subject = renderTemplate(customSubject, placeholderValues);
+      }
+      if (customBody.trim()) {
+        html = renderTemplate(customBody, placeholderValues);
+      }
+    }
+
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject,
+      html,
     });
   }
 

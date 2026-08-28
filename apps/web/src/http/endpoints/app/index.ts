@@ -111,3 +111,22 @@ export const testSmtpConnection = (
 ): Promise<{ data: TestSmtpConnectionResult }> => {
   return apiInstance.post(`/api/app/test-smtp`, body || {}, options);
 };
+
+export interface TestShareNotificationEmailBody {
+  subject?: string;
+  body?: string;
+}
+
+export type TestShareNotificationEmailResult = { message: string };
+
+/**
+ * Sends a sample "file shared with you" email to the requesting admin, rendered
+ * from the given draft subject/body (admin only).
+ * @summary Send a test share-notification email
+ */
+export const testShareNotificationEmailTemplate = (
+  body: TestShareNotificationEmailBody,
+  options?: AxiosRequestConfig
+): Promise<{ data: TestShareNotificationEmailResult }> => {
+  return apiInstance.post(`/api/app/email-templates/share-notification/test`, body, options);
+};
