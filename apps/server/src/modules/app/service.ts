@@ -8,11 +8,8 @@ import {
   SHARE_NOTIFICATION_PLACEHOLDERS,
 } from "../email/template";
 
-const SHARE_AUTO_DELETE_KEYS = [
-  "shareAutoDeleteGraceDays",
-  "shareAutoDeleteFirstWarningDays",
-  "shareAutoDeleteSecondWarningDays",
-];
+const SHARE_AUTO_DELETE_KEYS = ["shareAutoDeleteGraceDays"];
+const MAX_DELETION_WARNING_DAYS = 30;
 
 const EMAIL_TEMPLATE_KEYS = ["shareNotificationEmailSubject", "shareNotificationEmailBody"];
 const MAX_EMAIL_TEMPLATE_SUBJECT_LENGTH = 200;
@@ -80,10 +77,10 @@ export class AppService {
     });
   }
 
-  // Ensures secondWarningDays < firstWarningDays < graceDays, so the two staged
-  // warning emails always land before the deletion deadline and in the right order.
-  // `overrides` carries only the keys being changed in this request; any key not
-  // present falls back to its currently-stored value.
+  // Ensures the grace period is non-negative and stays after every configured
+  // notification day (so every warning still lands before deletion). `overrides`
+  // carries only the keys being changed in this request; any key not present
+  // falls back to its currently-stored value.
   private async validateShareAutoDeleteConfig(overrides: Record<string, string>) {
     const resolve = async (key: string) => {
       if (overrides[key] !== undefined) return Number(overrides[key]);
@@ -91,21 +88,70 @@ export class AppService {
       return config ? Number(config.value) : NaN;
     };
 
-    const [graceDays, firstWarningDays, secondWarningDays] = await Promise.all([
-      resolve("shareAutoDeleteGraceDays"),
-      resolve("shareAutoDeleteFirstWarningDays"),
-      resolve("shareAutoDeleteSecondWarningDays"),
-    ]);
+    const graceDays = await resolve("shareAutoDeleteGraceDays");
 
-    if ([graceDays, firstWarningDays, secondWarningDays].some((n) => Number.isNaN(n) || n < 0)) {
-      throw new Error("Share auto-delete periods must be non-negative numbers");
+    if (Number.isNaN(graceDays) || graceDays < 0) {
+      throw new Error("Share auto-delete grace period must be a non-negative number");
     }
 
-    if (!(secondWarningDays < firstWarningDays && firstWarningDays < graceDays)) {
+    const schedules = await prisma.deletionNotificationSchedule.findMany();
+    const maxScheduledDay = schedules.reduce((max, entry) => Math.max(max, entry.daysBeforeDeletion), 0);
+
+    if (schedules.length > 0 && maxScheduledDay >= graceDays) {
       throw new Error(
-        "Invalid share auto-delete periods: the second warning must be sooner than the first warning, and the first warning must be sooner than the deletion grace period"
+        `The deletion grace period (${graceDays} days) must be greater than every configured notification day (largest is ${maxScheduledDay})`
       );
     }
+  }
+
+  // Rejects non-positive, oversized, or duplicate day values, and makes sure every
+  // notification still lands before the configured deletion grace period.
+  private async validateDeletionNotificationSchedule(entries: { daysBeforeDeletion: number; enabled: boolean }[]) {
+    const graceDaysConfig = await prisma.appConfig.findUnique({ where: { key: "shareAutoDeleteGraceDays" } });
+    const graceDays = graceDaysConfig ? Number(graceDaysConfig.value) : NaN;
+
+    const seen = new Set<number>();
+    for (const entry of entries) {
+      if (!Number.isInteger(entry.daysBeforeDeletion) || entry.daysBeforeDeletion <= 0) {
+        throw new Error("Each notification day must be a positive whole number");
+      }
+      if (entry.daysBeforeDeletion > MAX_DELETION_WARNING_DAYS) {
+        throw new Error(`Notifications can be scheduled at most ${MAX_DELETION_WARNING_DAYS} days before deletion`);
+      }
+      if (seen.has(entry.daysBeforeDeletion)) {
+        throw new Error(`Duplicate notification day: ${entry.daysBeforeDeletion}`);
+      }
+      seen.add(entry.daysBeforeDeletion);
+
+      if (!Number.isNaN(graceDays) && entry.daysBeforeDeletion >= graceDays) {
+        throw new Error(
+          `Notification day ${entry.daysBeforeDeletion} must be less than the deletion grace period (${graceDays} days)`
+        );
+      }
+    }
+  }
+
+  async getDeletionNotificationSchedules() {
+    return prisma.deletionNotificationSchedule.findMany({ orderBy: { daysBeforeDeletion: "desc" } });
+  }
+
+  // Replaces the whole schedule at once - simplest correct semantics for a small,
+  // admin-edited list (add/remove/edit rows client-side, save the resulting set).
+  async replaceDeletionNotificationSchedules(entries: { daysBeforeDeletion: number; enabled: boolean }[]) {
+    await this.validateDeletionNotificationSchedule(entries);
+
+    return prisma.$transaction(async (tx) => {
+      await tx.deletionNotificationSchedule.deleteMany({});
+      if (entries.length > 0) {
+        await tx.deletionNotificationSchedule.createMany({
+          data: entries.map((entry) => ({
+            daysBeforeDeletion: entry.daysBeforeDeletion,
+            enabled: entry.enabled,
+          })),
+        });
+      }
+      return tx.deletionNotificationSchedule.findMany({ orderBy: { daysBeforeDeletion: "desc" } });
+    });
   }
 
   async getAppInfo() {

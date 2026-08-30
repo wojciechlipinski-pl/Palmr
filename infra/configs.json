@@ -11,9 +11,7 @@
     "maxFileSize",
     "maxTotalStoragePerUser",
     "shareAutoDeleteEnabled",
-    "shareAutoDeleteGraceDays",
-    "shareAutoDeleteFirstWarningDays",
-    "shareAutoDeleteSecondWarningDays"
+    "shareAutoDeleteGraceDays"
   ],
   "security": [
     "jwtSecret",

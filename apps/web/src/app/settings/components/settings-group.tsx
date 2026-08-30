@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { createFieldDescriptions, createGroupMetadata } from "../constants";
 import { SettingsGroupProps } from "../types";
+import { DeletionNotificationScheduleEditor } from "./deletion-notification-schedule-editor";
 import { isFieldHidden, SettingsInput } from "./settings-input";
 import { ShareNotificationTemplateEditor } from "./share-notification-template-editor";
 import { SmtpTestButton } from "./smtp-test-button";
@@ -22,6 +23,7 @@ export function SettingsGroup({ group, configs, form, isCollapsed, onToggleColla
   };
 
   const isEmailGroup = group === "email";
+  const isStorageGroup = group === "storage";
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -104,6 +106,12 @@ export function SettingsGroup({ group, configs, form, isCollapsed, onToggleColla
             <>
               <Separator className="my-6" />
               <ShareNotificationTemplateEditor form={form} disabled={form.watch("configs.smtpEnabled") !== "true"} />
+            </>
+          )}
+          {isStorageGroup && (
+            <>
+              <Separator className="my-6" />
+              <DeletionNotificationScheduleEditor />
             </>
           )}
           <div className="flex justify-between items-center mt-4">

@@ -12,7 +12,17 @@ import { Config } from "../types";
 import { FileSizeInput } from "./file-size-input";
 import { LogoInput } from "./logo-input";
 
-const HIDDEN_FIELDS = ["serverUrl", "firstUserAccess", "shareNotificationEmailSubject", "shareNotificationEmailBody"];
+const HIDDEN_FIELDS = [
+  "serverUrl",
+  "firstUserAccess",
+  "shareNotificationEmailSubject",
+  "shareNotificationEmailBody",
+  // Legacy two-threshold warning config, superseded by the deletion notification
+  // schedule editor. Hidden (rather than removed) so an existing install that
+  // still has these AppConfig rows doesn't show them as stray duplicate fields.
+  "shareAutoDeleteFirstWarningDays",
+  "shareAutoDeleteSecondWarningDays",
+];
 
 export function isFieldHidden(fieldKey: string): boolean {
   return HIDDEN_FIELDS.includes(fieldKey);

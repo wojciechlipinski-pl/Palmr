@@ -72,6 +72,25 @@ export class AppController {
     }
   }
 
+  async getDeletionNotificationSchedules(_request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const schedules = await this.appService.getDeletionNotificationSchedules();
+      return reply.send({ schedules });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
+  async replaceDeletionNotificationSchedules(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { schedules } = request.body as { schedules: { daysBeforeDeletion: number; enabled: boolean }[] };
+      const updated = await this.appService.replaceDeletionNotificationSchedules(schedules);
+      return reply.send({ schedules: updated });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
   async testShareNotificationEmailTemplate(request: FastifyRequest, reply: FastifyReply) {
     try {
       await request.jwtVerify();

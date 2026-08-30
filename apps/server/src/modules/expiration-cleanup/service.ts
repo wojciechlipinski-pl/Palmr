@@ -10,9 +10,15 @@ const INITIAL_DELAY_MS = 60 * 1000; // let the app finish booting before the fir
 const SHARE_AUTO_DELETE_DEFAULTS: Array<{ key: string; value: string; type: string; group: string }> = [
   { key: "shareAutoDeleteEnabled", value: "false", type: "boolean", group: "storage" },
   { key: "shareAutoDeleteGraceDays", value: "21", type: "number", group: "storage" },
-  { key: "shareAutoDeleteFirstWarningDays", value: "14", type: "number", group: "storage" },
-  { key: "shareAutoDeleteSecondWarningDays", value: "3", type: "number", group: "storage" },
 ];
+
+// Historical hardcoded warning-day pair, before the configurable schedule. Only
+// read by ensureDeletionNotificationSchedule() to carry forward a pre-existing
+// install's settings; no longer seeded for new installs.
+const LEGACY_FIRST_WARNING_KEY = "shareAutoDeleteFirstWarningDays";
+const LEGACY_SECOND_WARNING_KEY = "shareAutoDeleteSecondWarningDays";
+const LEGACY_DEFAULT_FIRST_WARNING_DAYS = 14;
+const LEGACY_DEFAULT_SECOND_WARNING_DAYS = 3;
 
 function addDays(date: Date, days: number): Date {
   const result = new Date(date);
@@ -20,7 +26,24 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
-type WarningField = "deletionWarningFirstSentAt" | "deletionWarningSecondSentAt";
+function parseSentDays(value: string): number[] {
+  return value
+    ? value
+        .split(",")
+        .map((part) => Number(part.trim()))
+        .filter((n) => Number.isInteger(n))
+    : [];
+}
+
+function hasSentDay(value: string, day: number): boolean {
+  return parseSentDays(value).includes(day);
+}
+
+function appendSentDay(value: string, day: number): string {
+  const days = parseSentDays(value);
+  if (days.includes(day)) return value;
+  return [...days, day].sort((a, b) => b - a).join(",");
+}
 
 /**
  * Periodically deletes shares and reverse-shares that have been expired (or,
@@ -65,6 +88,85 @@ export class ExpirationCleanupService {
     }
   }
 
+  /**
+   * One-time migration off the old hardcoded first/second warning-day pair onto
+   * the configurable DeletionNotificationSchedule table. A non-empty schedule
+   * table is treated as "already migrated" (or already configured by an admin),
+   * so this is safe and cheap to call on every boot.
+   *
+   * - Fresh install: no legacy config rows exist, so it seeds the historical
+   *   defaults (14 and 3 days) - identical out-of-the-box behavior to before.
+   * - Existing install: reads whatever the admin had configured (default or
+   *   customized) for the legacy keys and carries those exact values forward,
+   *   and copies each share/reverse-share's legacy "warning already sent" flags
+   *   onto the new `sentDeletionWarningDays` field so nobody gets a duplicate
+   *   warning right after upgrading.
+   */
+  async ensureDeletionNotificationSchedule() {
+    const existingCount = await prisma.deletionNotificationSchedule.count();
+    if (existingCount > 0) return;
+
+    const [legacyFirst, legacySecond] = await Promise.all([
+      prisma.appConfig.findUnique({ where: { key: LEGACY_FIRST_WARNING_KEY } }),
+      prisma.appConfig.findUnique({ where: { key: LEGACY_SECOND_WARNING_KEY } }),
+    ]);
+
+    const firstDays = legacyFirst ? Number(legacyFirst.value) : LEGACY_DEFAULT_FIRST_WARNING_DAYS;
+    const secondDays = legacySecond ? Number(legacySecond.value) : LEGACY_DEFAULT_SECOND_WARNING_DAYS;
+
+    const daysToSeed = Array.from(new Set([firstDays, secondDays].filter((n) => Number.isFinite(n) && n > 0)));
+
+    if (daysToSeed.length > 0) {
+      await prisma.deletionNotificationSchedule.createMany({
+        data: daysToSeed.map((daysBeforeDeletion) => ({ daysBeforeDeletion, enabled: true })),
+      });
+      console.log(
+        `[ExpirationCleanup] Seeded deletion notification schedule from ${
+          legacyFirst || legacySecond ? "existing" : "default"
+        } configuration: ${daysToSeed.join(", ")} day(s) before deletion`
+      );
+    }
+
+    if (legacyFirst) {
+      await this.carryForwardSentWarnings(firstDays, "deletionWarningFirstSentAt");
+    }
+    if (legacySecond) {
+      await this.carryForwardSentWarnings(secondDays, "deletionWarningSecondSentAt");
+    }
+  }
+
+  private async carryForwardSentWarnings(
+    day: number,
+    legacyField: "deletionWarningFirstSentAt" | "deletionWarningSecondSentAt"
+  ) {
+    if (!Number.isFinite(day) || day <= 0) return;
+
+    const shares = await prisma.share.findMany({
+      where: { [legacyField]: { not: null } },
+      select: { id: true, sentDeletionWarningDays: true },
+    });
+    for (const share of shares) {
+      const updated = appendSentDay(share.sentDeletionWarningDays, day);
+      if (updated !== share.sentDeletionWarningDays) {
+        await prisma.share.update({ where: { id: share.id }, data: { sentDeletionWarningDays: updated } });
+      }
+    }
+
+    const reverseShares = await prisma.reverseShare.findMany({
+      where: { [legacyField]: { not: null } },
+      select: { id: true, sentDeletionWarningDays: true },
+    });
+    for (const reverseShare of reverseShares) {
+      const updated = appendSentDay(reverseShare.sentDeletionWarningDays, day);
+      if (updated !== reverseShare.sentDeletionWarningDays) {
+        await prisma.reverseShare.update({
+          where: { id: reverseShare.id },
+          data: { sentDeletionWarningDays: updated },
+        });
+      }
+    }
+  }
+
   async runCycle() {
     if (this.running) return; // don't overlap if a previous run is still going
     this.running = true;
@@ -74,16 +176,19 @@ export class ExpirationCleanupService {
       if (!enabled) return;
 
       const graceDays = Number(await this.configService.getValue("shareAutoDeleteGraceDays"));
-      const firstWarningDays = Number(await this.configService.getValue("shareAutoDeleteFirstWarningDays"));
-      const secondWarningDays = Number(await this.configService.getValue("shareAutoDeleteSecondWarningDays"));
-
-      if ([graceDays, firstWarningDays, secondWarningDays].some((n) => Number.isNaN(n))) {
+      if (Number.isNaN(graceDays)) {
         console.error("[ExpirationCleanup] Invalid share auto-delete configuration, skipping this run");
         return;
       }
 
-      await this.processShares(graceDays, firstWarningDays, secondWarningDays);
-      await this.processReverseShares(graceDays, firstWarningDays, secondWarningDays);
+      const schedule = await prisma.deletionNotificationSchedule.findMany({
+        where: { enabled: true },
+        orderBy: { daysBeforeDeletion: "desc" },
+      });
+      const warningDays = schedule.map((entry) => entry.daysBeforeDeletion);
+
+      await this.processShares(graceDays, warningDays);
+      await this.processReverseShares(graceDays, warningDays);
     } catch (error) {
       console.error("[ExpirationCleanup] Cleanup cycle failed:", error);
     } finally {
@@ -91,7 +196,7 @@ export class ExpirationCleanupService {
     }
   }
 
-  private async processShares(graceDays: number, firstWarningDays: number, secondWarningDays: number) {
+  private async processShares(graceDays: number, warningDays: number[]) {
     const now = new Date();
 
     const candidates = await prisma.share.findMany({
@@ -110,8 +215,6 @@ export class ExpirationCleanupService {
       if (!triggerAt) continue;
 
       const deletionDeadline = addDays(triggerAt, graceDays);
-      const firstWarningAt = addDays(deletionDeadline, -firstWarningDays);
-      const secondWarningAt = addDays(deletionDeadline, -secondWarningDays);
 
       try {
         if (now >= deletionDeadline) {
@@ -119,12 +222,11 @@ export class ExpirationCleanupService {
           continue;
         }
 
-        if (now >= firstWarningAt && !share.deletionWarningFirstSentAt) {
-          await this.sendWarning(share, "share", deletionDeadline, firstWarningDays, "deletionWarningFirstSentAt");
-        }
-
-        if (now >= secondWarningAt && !share.deletionWarningSecondSentAt) {
-          await this.sendWarning(share, "share", deletionDeadline, secondWarningDays, "deletionWarningSecondSentAt");
+        for (const days of warningDays) {
+          const warningAt = addDays(deletionDeadline, -days);
+          if (now >= warningAt && !hasSentDay(share.sentDeletionWarningDays, days)) {
+            await this.sendWarning(share, "share", deletionDeadline, days);
+          }
         }
       } catch (error) {
         console.error(`[ExpirationCleanup] Failed processing share ${share.id}:`, error);
@@ -132,7 +234,7 @@ export class ExpirationCleanupService {
     }
   }
 
-  private async processReverseShares(graceDays: number, firstWarningDays: number, secondWarningDays: number) {
+  private async processReverseShares(graceDays: number, warningDays: number[]) {
     const now = new Date();
 
     const candidates = await prisma.reverseShare.findMany({
@@ -147,8 +249,6 @@ export class ExpirationCleanupService {
       if (!reverseShare.expiration) continue;
 
       const deletionDeadline = addDays(reverseShare.expiration, graceDays);
-      const firstWarningAt = addDays(deletionDeadline, -firstWarningDays);
-      const secondWarningAt = addDays(deletionDeadline, -secondWarningDays);
 
       try {
         if (now >= deletionDeadline) {
@@ -156,24 +256,11 @@ export class ExpirationCleanupService {
           continue;
         }
 
-        if (now >= firstWarningAt && !reverseShare.deletionWarningFirstSentAt) {
-          await this.sendWarning(
-            reverseShare,
-            "reverseShare",
-            deletionDeadline,
-            firstWarningDays,
-            "deletionWarningFirstSentAt"
-          );
-        }
-
-        if (now >= secondWarningAt && !reverseShare.deletionWarningSecondSentAt) {
-          await this.sendWarning(
-            reverseShare,
-            "reverseShare",
-            deletionDeadline,
-            secondWarningDays,
-            "deletionWarningSecondSentAt"
-          );
+        for (const days of warningDays) {
+          const warningAt = addDays(deletionDeadline, -days);
+          if (now >= warningAt && !hasSentDay(reverseShare.sentDeletionWarningDays, days)) {
+            await this.sendWarning(reverseShare, "reverseShare", deletionDeadline, days);
+          }
         }
       } catch (error) {
         console.error(`[ExpirationCleanup] Failed processing reverse share ${reverseShare.id}:`, error);
@@ -182,25 +269,31 @@ export class ExpirationCleanupService {
   }
 
   private async sendWarning(
-    item: { id: string; name: string | null; creator?: { email: string } | null },
+    item: { id: string; name: string | null; creator?: { email: string } | null; sentDeletionWarningDays: string },
     type: "share" | "reverseShare",
     deadline: Date,
-    daysRemaining: number,
-    field: WarningField
+    daysRemaining: number
   ) {
     const email = item.creator?.email;
     if (email) {
       try {
-        await this.emailService.sendExpirationDeletionWarning(email, item.name || "Unnamed", type, deadline, daysRemaining);
+        await this.emailService.sendExpirationDeletionWarning(
+          email,
+          item.name || "Unnamed",
+          type,
+          deadline,
+          daysRemaining
+        );
       } catch (error) {
         console.error(`[ExpirationCleanup] Failed to send warning email for ${type} ${item.id}:`, error);
       }
     }
 
+    const updatedSentDays = appendSentDay(item.sentDeletionWarningDays, daysRemaining);
     if (type === "share") {
-      await prisma.share.update({ where: { id: item.id }, data: { [field]: new Date() } });
+      await prisma.share.update({ where: { id: item.id }, data: { sentDeletionWarningDays: updatedSentDays } });
     } else {
-      await prisma.reverseShare.update({ where: { id: item.id }, data: { [field]: new Date() } });
+      await prisma.reverseShare.update({ where: { id: item.id }, data: { sentDeletionWarningDays: updatedSentDays } });
     }
   }
 
@@ -253,7 +346,9 @@ export class ExpirationCleanupService {
     }
 
     await prisma.reverseShare.delete({ where: { id: reverseShare.id } });
-    console.log(`[ExpirationCleanup] Deleted expired reverse share ${reverseShare.id} ("${reverseShare.name || "Unnamed"}")`);
+    console.log(
+      `[ExpirationCleanup] Deleted expired reverse share ${reverseShare.id} ("${reverseShare.name || "Unnamed"}")`
+    );
   }
 
   private async hardDeleteFile(fileId: string, objectName: string) {
@@ -328,8 +423,7 @@ export class ExpirationCleanupService {
         : Promise.resolve([]),
     ]);
 
-    const isExclusiveToCurrentShare = (shares: { id: string }[]) =>
-      shares.every((s) => s.id === currentShareId);
+    const isExclusiveToCurrentShare = (shares: { id: string }[]) => shares.every((s) => s.id === currentShareId);
 
     const isFullyExclusive =
       foldersWithShares.every((f) => isExclusiveToCurrentShare(f.shares)) &&

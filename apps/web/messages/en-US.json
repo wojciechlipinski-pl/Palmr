@@ -1374,6 +1374,14 @@
         "title": "Second Warning Email (Days Before Deletion)",
         "description": "How many days before deletion to send the creator a final warning email. Must be sooner than the first warning"
       },
+      "deletionNotificationSchedule": {
+        "title": "Deletion warning schedule",
+        "description": "Add as many warning emails as you like, each a number of days before an expired or limit-reached share is permanently deleted. Leave the list empty to send no warnings.",
+        "empty": "No deletion warnings configured.",
+        "daysPlaceholder": "Days before deletion",
+        "daysSuffix": "days before deletion",
+        "enabled": "Enabled"
+      },
       "firstUserAccess": {
         "title": "First User Access",
         "description": "Settings for first access of new users"
@@ -1419,7 +1427,9 @@
       "testSmtp": "Test Connection",
       "testing": "Testing...",
       "previewEmail": "Preview",
-      "sendTestEmail": "Send test email to me"
+      "sendTestEmail": "Send test email to me",
+      "addDeletionWarning": "Add notification",
+      "saveDeletionSchedule": "Save schedule"
     },
     "errors": {
       "loadFailed": "Failed to load settings",
@@ -1428,6 +1438,11 @@
     },
     "messages": {
       "noChanges": "No changes to save",
+      "deletionScheduleLoadFailed": "Couldn't load the deletion notification schedule",
+      "deletionSchedulePositiveInteger": "Every notification day must be a positive whole number",
+      "deletionScheduleMaxDays": "Notifications can be scheduled at most {max} days before deletion",
+      "deletionScheduleDuplicate": "Duplicate notification day: {day}",
+      "deletionScheduleSaved": "Deletion notification schedule saved",
       "updateSuccess": "{group} settings updated successfully",
       "smtpTestSuccess": "SMTP connection successful! Your email configuration is working correctly.",
       "smtpTestFailed": "SMTP connection failed: {error}",

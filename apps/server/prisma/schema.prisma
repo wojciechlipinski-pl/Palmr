@@ -71,10 +71,18 @@ model Share {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Auto-delete tracking: when the max-views limit was first reached, and when
-  // each staged deletion-warning email was sent. Used by the expiration cleanup
-  // service; expiration-based deletion instead reads `expiration` directly.
-  maxViewsReachedAt           DateTime?
+  // Auto-delete tracking: when the max-views limit was first reached, and which
+  // DeletionNotificationSchedule day-thresholds have already had a warning sent
+  // (comma-separated `daysBeforeDeletion` values, e.g. "14,3"). Used by the
+  // expiration cleanup service; expiration-based deletion instead reads
+  // `expiration` directly.
+  maxViewsReachedAt     DateTime?
+  sentDeletionWarningDays String  @default("")
+
+  // Deprecated: replaced by `sentDeletionWarningDays` / DeletionNotificationSchedule.
+  // Kept (unused by the app) so a pre-existing install's history can be read once
+  // by the one-time migration in ExpirationCleanupService.ensureDeletionNotificationSchedule
+  // without a destructive schema change; safe to drop in a future cleanup.
   deletionWarningFirstSentAt  DateTime?
   deletionWarningSecondSentAt DateTime?
 
@@ -116,6 +124,22 @@ model ShareRecipient {
   share   Share  @relation(fields: [shareId], references: [id], onDelete: Cascade)
 
   @@map("share_recipients")
+}
+
+// Admin-configurable list of "send a deletion warning email N days before an
+// expired/limit-reached share gets deleted" thresholds, replacing the old
+// hardcoded first/second warning pair. See ExpirationCleanupService for how
+// this is consumed and ExpirationCleanupService.ensureDeletionNotificationSchedule
+// for the one-time migration off the legacy two-column config.
+model DeletionNotificationSchedule {
+  id                 String   @id @default(cuid())
+  daysBeforeDeletion Int
+  enabled            Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([daysBeforeDeletion])
+  @@map("deletion_notification_schedules")
 }
 
 model AppConfig {
@@ -236,6 +260,9 @@ model ReverseShare {
 
   // Auto-delete tracking, mirrors Share's warning fields (reverse shares only
   // ever expire, there is no view-limit trigger for them).
+  sentDeletionWarningDays String @default("")
+
+  // Deprecated, see the matching fields on Share for why these are kept.
   deletionWarningFirstSentAt  DateTime?
   deletionWarningSecondSentAt DateTime?
 
