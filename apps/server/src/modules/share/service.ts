@@ -422,8 +422,10 @@ export class ShareService {
     }
 
     let senderName = "Someone";
+    let senderEmail: string | undefined;
     try {
       const sender = await this.userService.getUserById(userId);
+      senderEmail = sender.email;
       if (sender.firstName && sender.lastName) {
         senderName = `${sender.firstName} ${sender.lastName}`;
       } else if (sender.firstName) {
@@ -439,7 +441,16 @@ export class ShareService {
 
     for (const recipient of share.recipients) {
       try {
-        await this.emailService.sendShareNotification(recipient.email, shareLink, share.name || undefined, senderName);
+        await this.emailService.sendShareNotification({
+          to: recipient.email,
+          shareLink,
+          shareName: share.name || undefined,
+          senderName,
+          senderEmail,
+          expiration: share.expiration,
+          message: share.description || undefined,
+          fileCount: share.files?.length ?? 0,
+        });
         notifiedRecipients.push(recipient.email);
       } catch (error) {
         console.error(`Failed to send email to ${recipient.email}:`, error);

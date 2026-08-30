@@ -1338,12 +1338,41 @@
       "hideVersion": {
         "title": "Ukryj Wersję",
         "description": "Ukryj wersję Palmr w stopce wszystkich stron"
+      },
+      "shareNotificationEmailSubject": {
+        "title": "Temat"
+      },
+      "shareNotificationEmailBody": {
+        "title": "Treść (HTML)"
+      },
+      "shareNotificationEmail": {
+        "title": "E-mail „udostępniono Ci plik”",
+        "description": "Dostosuj e-mail, który otrzymuje odbiorca, gdy ktoś udostępni mu plik. Pozostaw oba pola puste, aby używać domyślnego szablonu.",
+        "subjectPlaceholder": "Domyślnie: '{appName}' - '{fileName}' shared with you",
+        "bodyPlaceholder": "Pozostaw puste, aby używać domyślnego szablonu",
+        "placeholdersTitle": "Dostępne placeholdery (kliknij, aby wstawić do treści):",
+        "placeholders": {
+          "fileName": "Nazwa udostępnienia / udostępnionego elementu",
+          "fileCount": "Liczba plików w udostępnieniu",
+          "senderName": "Imię i nazwisko osoby udostępniającej pliki",
+          "senderEmail": "Adres e-mail nadawcy",
+          "recipientEmail": "Adres e-mail tego odbiorcy",
+          "expiryDate": "Kiedy wygasa udostępnienie (lub tekst zastępczy)",
+          "downloadLink": "Link do dostępu do udostępnionych plików",
+          "message": "Opcjonalna wiadomość dołączona przez nadawcę do udostępnienia",
+          "appName": "Nazwa tej aplikacji"
+        },
+        "previewHint": "Wyrenderowano z przykładowymi danymi - prawdziwy e-mail używa rzeczywistych danych udostępnienia.",
+        "testSuccess": "Wysłano e-mail testowy - sprawdź skrzynkę odbiorczą.",
+        "testFailed": "Nie udało się wysłać e-maila testowego: {error}"
       }
     },
     "buttons": {
       "save": "Zapisz {group}",
       "testSmtp": "Testuj połączenie",
-      "testing": "Testowanie..."
+      "testing": "Testowanie...",
+      "previewEmail": "Podgląd",
+      "sendTestEmail": "Wyślij e-mail testowy do mnie"
     },
     "errors": {
       "loadFailed": "Nie udało się załadować ustawień",

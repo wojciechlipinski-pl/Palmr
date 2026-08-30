@@ -1,5 +1,12 @@
 import { prisma } from "../../shared/prisma";
 import { ConfigService } from "../config/service";
+import { EmailService } from "../email/service";
+import {
+  findInvalidPlaceholders,
+  sanitizeEmailHtml,
+  sanitizeEmailSubject,
+  SHARE_NOTIFICATION_PLACEHOLDERS,
+} from "../email/template";
 
 const SHARE_AUTO_DELETE_KEYS = [
   "shareAutoDeleteGraceDays",
@@ -7,8 +14,71 @@ const SHARE_AUTO_DELETE_KEYS = [
   "shareAutoDeleteSecondWarningDays",
 ];
 
+const EMAIL_TEMPLATE_KEYS = ["shareNotificationEmailSubject", "shareNotificationEmailBody"];
+const MAX_EMAIL_TEMPLATE_SUBJECT_LENGTH = 200;
+const MAX_EMAIL_TEMPLATE_BODY_LENGTH = 50000;
+
 export class AppService {
   private configService = new ConfigService();
+  private emailService = new EmailService();
+
+  // Rejects unknown `{placeholder}` tokens and oversized input, then strips any
+  // markup the admin isn't allowed to inject into the outgoing HTML email.
+  private sanitizeEmailTemplateValue(key: string, value: string): string {
+    if (!value.trim()) {
+      return "";
+    }
+
+    const invalidPlaceholders = findInvalidPlaceholders(value, SHARE_NOTIFICATION_PLACEHOLDERS);
+    if (invalidPlaceholders.length > 0) {
+      throw new Error(
+        `Unknown placeholder(s) in email template: ${invalidPlaceholders.map((token) => `{${token}}`).join(", ")}`
+      );
+    }
+
+    if (key === "shareNotificationEmailSubject") {
+      if (value.length > MAX_EMAIL_TEMPLATE_SUBJECT_LENGTH) {
+        throw new Error(`Email subject must be ${MAX_EMAIL_TEMPLATE_SUBJECT_LENGTH} characters or fewer`);
+      }
+      return sanitizeEmailSubject(value);
+    }
+
+    if (key === "shareNotificationEmailBody") {
+      if (value.length > MAX_EMAIL_TEMPLATE_BODY_LENGTH) {
+        throw new Error(`Email body must be ${MAX_EMAIL_TEMPLATE_BODY_LENGTH} characters or fewer`);
+      }
+      return sanitizeEmailHtml(value);
+    }
+
+    return value;
+  }
+
+  // Sends a sample "file shared with you" email to the requesting admin, using the
+  // provided (unsaved) draft subject/body so they can preview changes before saving.
+  // Falls back to the currently saved template, then the built-in default, for
+  // whichever of the two is left blank - matching how the real send behaves.
+  async sendShareNotificationTestEmail(
+    adminUser: { id: string; email: string; firstName?: string | null; lastName?: string | null },
+    draftSubject: string,
+    draftBody: string
+  ) {
+    const subject = draftSubject ? this.sanitizeEmailTemplateValue("shareNotificationEmailSubject", draftSubject) : "";
+    const body = draftBody ? this.sanitizeEmailTemplateValue("shareNotificationEmailBody", draftBody) : "";
+
+    const senderName = [adminUser.firstName, adminUser.lastName].filter(Boolean).join(" ") || "Jane Doe";
+
+    await this.emailService.sendShareNotification({
+      to: adminUser.email,
+      shareLink: "https://example.com/s/sample-share",
+      shareName: "example-file.pdf",
+      senderName,
+      senderEmail: adminUser.email,
+      expiration: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      message: "Hey! Here are the files we discussed.",
+      fileCount: 3,
+      templateOverride: { subject, body },
+    });
+  }
 
   // Ensures secondWarningDays < firstWarningDays < graceDays, so the two staged
   // warning emails always land before the deletion deadline and in the right order.
@@ -118,6 +188,11 @@ export class AppService {
       await this.validateShareAutoDeleteConfig({ [key]: value });
     }
 
+    let sanitizedValue = value;
+    if (EMAIL_TEMPLATE_KEYS.includes(key)) {
+      sanitizedValue = this.sanitizeEmailTemplateValue(key, value);
+    }
+
     const config = await prisma.appConfig.findUnique({
       where: { key },
     });
@@ -128,7 +203,7 @@ export class AppService {
 
     return prisma.appConfig.update({
       where: { key },
-      data: { value },
+      data: { value: sanitizedValue },
     });
   }
 
@@ -166,8 +241,15 @@ export class AppService {
       throw new Error(`Configurations not found: ${missingKeys.join(", ")}`);
     }
 
+    const sanitizedUpdates = updates.map((update) => ({
+      key: update.key,
+      value: EMAIL_TEMPLATE_KEYS.includes(update.key)
+        ? this.sanitizeEmailTemplateValue(update.key, update.value)
+        : update.value,
+    }));
+
     return prisma.$transaction(
-      updates.map((update) =>
+      sanitizedUpdates.map((update) =>
         prisma.appConfig.update({
           where: { key: update.key },
           data: { value: update.value },

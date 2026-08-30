@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { createFieldDescriptions, createGroupMetadata } from "../constants";
 import { SettingsGroupProps } from "../types";
 import { isFieldHidden, SettingsInput } from "./settings-input";
+import { ShareNotificationTemplateEditor } from "./share-notification-template-editor";
 import { SmtpTestButton } from "./smtp-test-button";
 
 export function SettingsGroup({ group, configs, form, isCollapsed, onToggleCollapse, onSubmit }: SettingsGroupProps) {
@@ -99,6 +100,12 @@ export function SettingsGroup({ group, configs, form, isCollapsed, onToggleColla
                 );
               })}
           </div>
+          {isEmailGroup && (
+            <>
+              <Separator className="my-6" />
+              <ShareNotificationTemplateEditor form={form} disabled={form.watch("configs.smtpEnabled") !== "true"} />
+            </>
+          )}
           <div className="flex justify-between items-center mt-4">
             <div className="flex">
               {isEmailGroup && form.watch("configs.smtpEnabled") === "true" && (

@@ -54,6 +54,7 @@
     "nodemailer": "^6.10.0",
     "openid-client": "^6.6.2",
     "qrcode": "^1.5.4",
+    "sanitize-html": "^2.13.1",
     "sharp": "^0.34.2",
     "speakeasy": "^2.0.0",
     "zod": "^3.25.67"
@@ -66,6 +67,7 @@
     "@types/node": "^22.13.4",
     "@types/nodemailer": "^6.4.17",
     "@types/qrcode": "^1.5.5",
+    "@types/sanitize-html": "^2.13.0",
     "@types/speakeasy": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "8.35.1",
     "@typescript-eslint/parser": "8.35.1",

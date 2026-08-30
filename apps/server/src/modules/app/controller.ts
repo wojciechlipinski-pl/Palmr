@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
 import { EmailService } from "../email/service";
+import { UserService } from "../user/service";
 import { LogoService } from "./logo.service";
 import { AppService } from "./service";
 
@@ -8,6 +9,7 @@ export class AppController {
   private appService = new AppService();
   private logoService = new LogoService();
   private emailService = new EmailService();
+  private userService = new UserService();
 
   async getAppInfo(_request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -65,6 +67,25 @@ export class AppController {
       const updates = request.body as Array<{ key: string; value: string }>;
       const configs = await this.appService.bulkUpdateConfigs(updates);
       return reply.send({ configs });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
+  async testShareNotificationEmailTemplate(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      await request.jwtVerify();
+
+      const jwtUser = (request as any).user;
+      if (!jwtUser?.isAdmin) {
+        return reply.status(403).send({ error: "Access restricted to administrators" });
+      }
+
+      const { subject, body } = request.body as { subject?: string; body?: string };
+      const adminUser = await this.userService.getUserById(jwtUser.userId);
+
+      await this.appService.sendShareNotificationTestEmail(adminUser, subject || "", body || "");
+      return reply.send({ message: "Test email sent" });
     } catch (error: any) {
       return reply.status(400).send({ error: error.message });
     }
