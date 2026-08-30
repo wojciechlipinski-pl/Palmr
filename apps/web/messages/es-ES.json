@@ -1332,7 +1332,7 @@
       "shareNotificationEmail": {
         "title": "“File shared with you” email",
         "description": "Customize the email recipients get when someone shares a file with them. Leave both fields empty to keep using the built-in default.",
-        "subjectPlaceholder": "Default: {appName} - {fileName} shared with you",
+        "subjectPlaceholder": "Default: '{appName}' - '{fileName}' shared with you",
         "bodyPlaceholder": "Leave empty to use the built-in default template",
         "placeholdersTitle": "Available placeholders (click to insert into the body):",
         "placeholders": {

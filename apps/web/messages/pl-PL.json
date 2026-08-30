@@ -1348,7 +1348,7 @@
       "shareNotificationEmail": {
         "title": "E-mail „udostępniono Ci plik”",
         "description": "Dostosuj e-mail, który otrzymuje odbiorca, gdy ktoś udostępni mu plik. Pozostaw oba pola puste, aby używać domyślnego szablonu.",
-        "subjectPlaceholder": "Domyślnie: {appName} - {fileName} shared with you",
+        "subjectPlaceholder": "Domyślnie: '{appName}' - '{fileName}' shared with you",
         "bodyPlaceholder": "Pozostaw puste, aby używać domyślnego szablonu",
         "placeholdersTitle": "Dostępne placeholdery (kliknij, aby wstawić do treści):",
         "placeholders": {

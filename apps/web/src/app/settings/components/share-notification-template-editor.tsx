@@ -131,7 +131,7 @@ export function ShareNotificationTemplateEditor({ form, disabled }: ShareNotific
         <Input
           id="shareNotificationEmailSubject"
           placeholder={t("settings.fields.shareNotificationEmail.subjectPlaceholder", {
-            defaultValue: "Default: {appName} - {fileName} shared with you",
+            defaultValue: "Default: '{appName}' - '{fileName}' shared with you",
           })}
           {...form.register("configs.shareNotificationEmailSubject")}
         />
