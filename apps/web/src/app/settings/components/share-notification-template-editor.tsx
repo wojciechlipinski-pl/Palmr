@@ -66,26 +66,30 @@ export function ShareNotificationTemplateEditor({ form, disabled }: ShareNotific
   const subject = form.watch("configs.shareNotificationEmailSubject") || "";
   const body = form.watch("configs.shareNotificationEmailBody") || "";
 
+  // Reads/writes the textarea's live DOM value (not the `body` watch() snapshot, which
+  // is stale until the next render) so rapid successive clicks each insert at the right
+  // position instead of racing a requestAnimationFrame-deferred cursor update.
   const insertPlaceholder = (token: string) => {
     const textarea = bodyRef.current;
     const placeholder = `{${token}}`;
 
     if (!textarea) {
-      form.setValue("configs.shareNotificationEmailBody", `${body}${placeholder}`);
+      const current = form.getValues("configs.shareNotificationEmailBody") || "";
+      form.setValue("configs.shareNotificationEmailBody", `${current}${placeholder}`, { shouldDirty: true });
       return;
     }
 
-    const start = textarea.selectionStart ?? body.length;
-    const end = textarea.selectionEnd ?? body.length;
-    const nextValue = `${body.slice(0, start)}${placeholder}${body.slice(end)}`;
+    const current = textarea.value;
+    const start = textarea.selectionStart ?? current.length;
+    const end = textarea.selectionEnd ?? current.length;
+    const nextValue = `${current.slice(0, start)}${placeholder}${current.slice(end)}`;
+    const cursor = start + placeholder.length;
+
+    textarea.value = nextValue;
+    textarea.focus();
+    textarea.setSelectionRange(cursor, cursor);
 
     form.setValue("configs.shareNotificationEmailBody", nextValue, { shouldDirty: true });
-
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const cursor = start + placeholder.length;
-      textarea.setSelectionRange(cursor, cursor);
-    });
   };
 
   const handleSendTest = async () => {
