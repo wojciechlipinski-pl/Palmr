@@ -1319,6 +1319,33 @@
         "title": "Wachtwoord Authenticatie",
         "description": "Wachtwoord-gebaseerde authenticatie inschakelen of uitschakelen"
       },
+      "shareNotificationEmailSubject": {
+        "title": "Subject"
+      },
+      "shareNotificationEmailBody": {
+        "title": "Body (HTML)"
+      },
+      "shareNotificationEmail": {
+        "title": "“File shared with you” email",
+        "description": "Customize the email recipients get when someone shares a file with them. Leave both fields empty to keep using the built-in default.",
+        "subjectPlaceholder": "Default: {appName} - {fileName} shared with you",
+        "bodyPlaceholder": "Leave empty to use the built-in default template",
+        "placeholdersTitle": "Available placeholders (click to insert into the body):",
+        "placeholders": {
+          "fileName": "Name of the share / shared item",
+          "fileCount": "Number of files in the share",
+          "senderName": "Name of the person sharing the files",
+          "senderEmail": "Email address of the sender",
+          "recipientEmail": "Email address of this recipient",
+          "expiryDate": "When the share expires (or a fallback text)",
+          "downloadLink": "Link to access the shared files",
+          "message": "Optional message the sender attached to the share",
+          "appName": "This application's name"
+        },
+        "previewHint": "Rendered with sample data - the real email uses the actual share's details.",
+        "testSuccess": "Test email sent - check your inbox.",
+        "testFailed": "Couldn't send the test email: {error}"
+      },
       "hideVersion": {
         "title": "Versie Verbergen",
         "description": "Verberg de Palmr-versie in de voettekst van alle pagina's"
@@ -1327,7 +1354,9 @@
     "buttons": {
       "save": "{group} Opslaan",
       "testSmtp": "Test Verbinding",
-      "testing": "Testen..."
+      "testing": "Testen...",
+      "previewEmail": "Preview",
+      "sendTestEmail": "Send test email to me"
     },
     "errors": {
       "loadFailed": "Fout bij het laden van instellingen",
