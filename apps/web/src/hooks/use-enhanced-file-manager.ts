@@ -182,9 +182,16 @@ export function useEnhancedFileManager(
 
       toast.dismiss(loadingToast);
       toast.success(t("shareManager.downloadSuccess"));
-    } catch (error) {
+    } catch (error: any) {
       console.error(`[FileManager] ❌ Download failed for ${fileName}:`, error);
-      toast.error(t("share.errors.downloadFailed"));
+      const code = error?.response?.data?.code;
+      if (code === "fileInfected") {
+        toast.error(t("share.errors.downloadBlockedInfected"));
+      } else if (code === "fileScanPending") {
+        toast.error(t("share.errors.downloadBlockedScanning"));
+      } else {
+        toast.error(t("share.errors.downloadFailed"));
+      }
     }
   };
 

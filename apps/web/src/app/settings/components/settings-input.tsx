@@ -120,6 +120,27 @@ export function SettingsInput({
       );
     }
 
+    if (config.key === "avScanActionOnInfection") {
+      const currentValue = watch(`configs.${config.key}`) || "quarantine";
+      return (
+        <Select
+          value={currentValue}
+          onValueChange={(value) => setValue(`configs.${config.key}`, value)}
+          disabled={isDisabled}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="quarantine">
+              {t("settings.fields.avScanActionOnInfection.options.quarantine")}
+            </SelectItem>
+            <SelectItem value="delete">{t("settings.fields.avScanActionOnInfection.options.delete")}</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    }
+
     if (config.type === "number" || config.type === "bigint") {
       return (
         <Input

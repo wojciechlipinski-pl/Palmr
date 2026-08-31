@@ -47,6 +47,9 @@ importers:
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
+      clamscan:
+        specifier: ^2.4.0
+        version: 2.4.0
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
@@ -96,6 +99,9 @@ importers:
       '@types/bcryptjs':
         specifier: ^2.4.6
         version: 2.4.6
+      '@types/clamscan':
+        specifier: ^2.4.1
+        version: 2.4.1
       '@types/node':
         specifier: ^22.13.4
         version: 22.16.0
@@ -1063,6 +1069,9 @@ packages:
   '@types/bcryptjs@2.4.6':
     resolution: {integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==}
 
+  '@types/clamscan@2.4.1':
+    resolution: {integrity: sha512-KhBHhXsMGDoEkk87VRtHtDsjoqXD3epu+a09c1sjW7xqpvoihScxhZNdNIPegVCLDvPOp4khiIpy02XabseztQ==}
+
   '@types/crypto-js@4.2.2':
     resolution: {integrity: sha512-sDOLlVbHhXpAUAL0YHDUUwDZf3iN4Bwi4W6a0W0b+QcAezUbRtH4FVb+9J4h+XFPW7l/gQ9F8qC7P+Ec4k8QVQ==}
 
@@ -1256,6 +1265,10 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
+
+  clamscan@2.4.0:
+    resolution: {integrity: sha512-XBOxUiGOcQGuKmCn5qaM5rIK153fGCwsvJMbjVtcnNJ+j/YHrSj2gKNjyP65yr/E8JsKTTDtKYFG++p7Lzigyw==}
+    engines: {node: '>=16.0.0'}
 
   cliui@6.0.0:
     resolution: {integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==}
@@ -3551,6 +3564,10 @@ snapshots:
 
   '@types/bcryptjs@2.4.6': {}
 
+  '@types/clamscan@2.4.1':
+    dependencies:
+      '@types/node': 22.16.0
+
   '@types/crypto-js@4.2.2': {}
 
   '@types/estree@1.0.8': {}
@@ -3764,6 +3781,8 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+
+  clamscan@2.4.0: {}
 
   cliui@6.0.0:
     dependencies:

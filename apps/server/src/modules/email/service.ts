@@ -474,4 +474,77 @@ export class EmailService {
       `,
     });
   }
+
+  async sendInfectedFileNotification(
+    to: string,
+    fileName: string,
+    threatName: string | null,
+    action: "quarantine" | "delete"
+  ) {
+    const transporter = await this.createTransporter();
+    if (!transporter) {
+      throw new Error("SMTP is not enabled");
+    }
+
+    const fromName = await this.configService.getValue("smtpFromName");
+    const fromEmail = await this.configService.getValue("smtpFromEmail");
+    const appName = await this.configService.getValue("appName");
+
+    const threatLabel = threatName || "unknown threat";
+    const actionLabel =
+      action === "delete"
+        ? "The file has been permanently deleted."
+        : "The file has been quarantined and is no longer downloadable.";
+
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject: `${appName} - Malware detected in "${fileName}"`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${appName} - Malware Detected</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5; color: #333333;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); overflow: hidden; margin-top: 40px; margin-bottom: 40px;">
+            <div style="background-color: #dc2626; padding: 30px 20px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">${appName}</h1>
+              <p style="margin: 2px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Malware Detected</p>
+            </div>
+
+            <div style="padding: 40px 30px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h2 style="margin: 0 0 12px 0; color: #1f2937; font-size: 24px; font-weight: 600;">A file you uploaded was flagged as infected</h2>
+                <p style="margin: 0; color: #6b7280; font-size: 16px; line-height: 1.6;">
+                  The antivirus scan detected <strong style="color: #dc2626;">${threatLabel}</strong> in the file <strong style="color: #374151;">"${fileName}"</strong>. ${actionLabel}
+                </p>
+              </div>
+
+              <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px 20px; margin-top: 8px;">
+                <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">
+                  <strong>What you can do:</strong> if you believe this is a false positive, contact your administrator. Otherwise, please make sure the file's source is trustworthy before uploading again.
+                </p>
+              </div>
+            </div>
+
+            <div style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                This email was sent by <strong>${appName}</strong>
+              </p>
+              <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
+                This is an automated notice from your configured antivirus scanning settings.
+              </p>
+              <p style="margin: 4px 0 0 0; color: #9ca3af; font-size: 10px;">
+                Powered by <a href="https://kyantech.com.br" style="color: #9ca3af; text-decoration: none;">Kyantech Solutions</a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+  }
 }

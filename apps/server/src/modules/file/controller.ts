@@ -9,6 +9,7 @@ import {
   parseFileName,
 } from "../../utils/file-name-generator";
 import { getContentType } from "../../utils/mime-types";
+import { checkScanGate } from "../av-scan/gate";
 import { ConfigService } from "../config/service";
 import {
   CheckFileInput,
@@ -121,6 +122,7 @@ export class FileController {
         extension: fileRecord.extension,
         size: fileRecord.size.toString(),
         objectName: fileRecord.objectName,
+        scanStatus: fileRecord.scanStatus,
         userId: fileRecord.userId,
         folderId: fileRecord.folderId,
         createdAt: fileRecord.createdAt,
@@ -284,7 +286,13 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = await this.hasShareAccess(fileRecord, password || (Array.isArray(request.headers["x-share-password"]) ? request.headers["x-share-password"][0] : request.headers["x-share-password"]));
+      let hasAccess = await this.hasShareAccess(
+        fileRecord,
+        password ||
+          (Array.isArray(request.headers["x-share-password"])
+            ? request.headers["x-share-password"][0]
+            : request.headers["x-share-password"])
+      );
 
       if (!hasAccess) {
         try {
@@ -298,6 +306,17 @@ export class FileController {
 
       if (!hasAccess) {
         return reply.status(401).send({ error: "Unauthorized access to file." });
+      }
+
+      const scanGate = await checkScanGate(fileRecord.scanStatus);
+      if (!scanGate.allowed) {
+        return reply.status(scanGate.reason === "infected" ? 403 : 202).send({
+          error:
+            scanGate.reason === "infected"
+              ? "This file was flagged as infected by the antivirus scan and cannot be downloaded."
+              : "This file is still being scanned for malware. Please try again shortly.",
+          code: scanGate.reason === "infected" ? "fileInfected" : "fileScanPending",
+        });
       }
 
       const fileName = fileRecord.name;
@@ -349,6 +368,17 @@ export class FileController {
             return reply.status(401).send({ error: "Unauthorized access to file." });
           }
 
+          const scanGate = await checkScanGate(reverseShareFile.scanStatus);
+          if (!scanGate.allowed) {
+            return reply.status(scanGate.reason === "infected" ? 403 : 202).send({
+              error:
+                scanGate.reason === "infected"
+                  ? "This file was flagged as infected by the antivirus scan and cannot be downloaded."
+                  : "This file is still being scanned for malware. Please try again shortly.",
+              code: scanGate.reason === "infected" ? "fileInfected" : "fileScanPending",
+            });
+          }
+
           // Stream from S3/storage system
           const stream = await this.fileService.getObjectStream(objectName);
           const contentType = getContentType(reverseShareFile.name);
@@ -364,7 +394,13 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = await this.hasShareAccess(fileRecord, password || (Array.isArray(request.headers["x-share-password"]) ? request.headers["x-share-password"][0] : request.headers["x-share-password"]));
+      let hasAccess = await this.hasShareAccess(
+        fileRecord,
+        password ||
+          (Array.isArray(request.headers["x-share-password"])
+            ? request.headers["x-share-password"][0]
+            : request.headers["x-share-password"])
+      );
 
       if (!hasAccess) {
         try {
@@ -378,6 +414,17 @@ export class FileController {
 
       if (!hasAccess) {
         return reply.status(401).send({ error: "Unauthorized access to file." });
+      }
+
+      const scanGate = await checkScanGate(fileRecord.scanStatus);
+      if (!scanGate.allowed) {
+        return reply.status(scanGate.reason === "infected" ? 403 : 202).send({
+          error:
+            scanGate.reason === "infected"
+              ? "This file was flagged as infected by the antivirus scan and cannot be downloaded."
+              : "This file is still being scanned for malware. Please try again shortly.",
+          code: scanGate.reason === "infected" ? "fileInfected" : "fileScanPending",
+        });
       }
 
       // Stream from S3/MinIO
@@ -438,6 +485,7 @@ export class FileController {
         extension: file.extension,
         size: typeof file.size === "bigint" ? file.size.toString() : file.size,
         objectName: file.objectName,
+        scanStatus: file.scanStatus,
         userId: file.userId,
         folderId: file.folderId,
         relativePath: file.relativePath || null,
@@ -524,6 +572,7 @@ export class FileController {
         extension: updatedFile.extension,
         size: updatedFile.size.toString(),
         objectName: updatedFile.objectName,
+        scanStatus: updatedFile.scanStatus,
         userId: updatedFile.userId,
         folderId: updatedFile.folderId,
         createdAt: updatedFile.createdAt,
@@ -581,6 +630,7 @@ export class FileController {
         extension: updatedFile.extension,
         size: updatedFile.size.toString(),
         objectName: updatedFile.objectName,
+        scanStatus: updatedFile.scanStatus,
         userId: updatedFile.userId,
         folderId: updatedFile.folderId,
         createdAt: updatedFile.createdAt,
@@ -621,6 +671,17 @@ export class FileController {
       if (!isMedia) {
         return reply.status(403).send({
           error: "Embed is only allowed for images, videos, and audio files.",
+        });
+      }
+
+      const scanGate = await checkScanGate(fileRecord.scanStatus);
+      if (!scanGate.allowed) {
+        return reply.status(scanGate.reason === "infected" ? 403 : 202).send({
+          error:
+            scanGate.reason === "infected"
+              ? "This file was flagged as infected by the antivirus scan and cannot be embedded."
+              : "This file is still being scanned for malware. Please try again shortly.",
+          code: scanGate.reason === "infected" ? "fileInfected" : "fileScanPending",
         });
       }
 
