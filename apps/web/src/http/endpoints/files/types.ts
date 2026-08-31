@@ -1,5 +1,7 @@
 import type { AxiosResponse } from "axios";
 
+export type FileScanStatus = "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR";
+
 export interface FileItem {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface FileItem {
   extension: string;
   size: string;
   objectName: string;
+  scanStatus?: FileScanStatus;
   userId: string;
   folderId: string | null;
   createdAt: string;

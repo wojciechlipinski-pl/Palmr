@@ -51,5 +51,26 @@ services:
       #
     restart: unless-stopped
 
+  # ==============================================================================
+  # ANTIVIRUS SCANNING (OPTIONAL)
+  # ==============================================================================
+  # ClamAV daemon used to scan uploaded files for malware. Palmr talks to it over
+  # TCP (default port 3310) and is disabled by default - turn it on in
+  # Settings > Storage once this container has finished downloading its virus
+  # database on first boot (can take a few minutes; check `docker logs palmr-clamav`).
+  clamav:
+    image: clamav/clamav:stable
+    container_name: palmr-clamav
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
 volumes:
   palmr_data:
+  clamav_data:

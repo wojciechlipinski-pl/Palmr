@@ -401,6 +401,11 @@
     "ariaLabel": "Files table",
     "selectAll": "Select all",
     "selectFile": "Select file {fileName}",
+    "scanStatus": {
+      "scanning": "Scanning for malware...",
+      "infected": "Infected: blocked by antivirus scan",
+      "error": "Antivirus scan failed"
+    },
     "columns": {
       "name": "NAME",
       "description": "DESCRIPTION",
@@ -1382,6 +1387,26 @@
         "daysSuffix": "days before deletion",
         "enabled": "Enabled"
       },
+      "avScanEnabled": {
+        "title": "Antivirus Scanning",
+        "description": "Scan every uploaded file for malware using a ClamAV server. Downloads are blocked while a file is being scanned or if it's found infected"
+      },
+      "avScanHost": {
+        "title": "ClamAV Host",
+        "description": "Hostname or IP address of the clamd daemon (e.g. the \"clamav\" service in docker-compose)"
+      },
+      "avScanPort": {
+        "title": "ClamAV Port",
+        "description": "TCP port of the clamd daemon (default: 3310)"
+      },
+      "avScanActionOnInfection": {
+        "title": "Action On Infected File",
+        "description": "What to do when a file is found infected: quarantine it (kept, but blocked from download) or delete it permanently",
+        "options": {
+          "quarantine": "Quarantine (keep, block downloads)",
+          "delete": "Delete permanently"
+        }
+      },
       "firstUserAccess": {
         "title": "First User Access",
         "description": "Settings for first access of new users"
@@ -1467,7 +1492,9 @@
     "errors": {
       "invalidPassword": "Invalid password. Please try again.",
       "loadFailed": "Failed to load share",
-      "downloadFailed": "Failed to download file"
+      "downloadFailed": "Failed to download file",
+      "downloadBlockedInfected": "This file was flagged as infected by the antivirus scan and cannot be downloaded",
+      "downloadBlockedScanning": "This file is still being scanned for malware. Please try again shortly"
     },
     "messages": {
       "downloadStarted": "Download started"

@@ -66,6 +66,30 @@ const defaultConfigs = [
     type: "number",
     group: "storage",
   },
+  {
+    key: "avScanEnabled",
+    value: "false",
+    type: "boolean",
+    group: "storage",
+  },
+  {
+    key: "avScanHost",
+    value: "clamav",
+    type: "string",
+    group: "storage",
+  },
+  {
+    key: "avScanPort",
+    value: "3310",
+    type: "number",
+    group: "storage",
+  },
+  {
+    key: "avScanActionOnInfection",
+    value: "quarantine",
+    type: "string",
+    group: "storage",
+  },
   // Note: the old shareAutoDeleteFirstWarningDays / shareAutoDeleteSecondWarningDays
   // keys are intentionally no longer seeded - the configurable warning schedule now
   // lives in the deletion_notification_schedules table (see

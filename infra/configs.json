@@ -11,7 +11,11 @@
     "maxFileSize",
     "maxTotalStoragePerUser",
     "shareAutoDeleteEnabled",
-    "shareAutoDeleteGraceDays"
+    "shareAutoDeleteGraceDays",
+    "avScanEnabled",
+    "avScanHost",
+    "avScanPort",
+    "avScanActionOnInfection"
   ],
   "security": [
     "jwtSecret",

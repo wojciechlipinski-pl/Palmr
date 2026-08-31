@@ -27,6 +27,7 @@ import { useDragDrop } from "@/hooks/use-drag-drop";
 import { getCachedDownloadUrl } from "@/lib/download-url-cache";
 import { getFileIcon } from "@/utils/file-icons";
 import { formatFileSize } from "@/utils/format-file-size";
+import { FileScanStatusBadge } from "./file-scan-status-badge";
 
 const urlCache: Record<string, { url: string; timestamp: number }> = {};
 const CACHE_DURATION = 1000 * 60;
@@ -38,6 +39,7 @@ interface File {
   extension: string;
   size: number;
   objectName: string;
+  scanStatus?: "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR";
   userId: string;
   folderId?: string;
   createdAt: string;
@@ -873,8 +875,12 @@ export function FilesGrid({
                         </div>
 
                         <div className="w-full space-y-1">
-                          <p className="text-sm font-medium truncate text-left" title={file.name}>
-                            {file.name}
+                          <p
+                            className="text-sm font-medium truncate text-left flex items-center justify-center gap-1"
+                            title={file.name}
+                          >
+                            <span className="truncate">{file.name}</span>
+                            <FileScanStatusBadge scanStatus={file.scanStatus} />
                           </p>
                           {file.description && (
                             <p className="text-xs text-muted-foreground truncate text-left" title={file.description}>

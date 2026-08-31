@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getFileIcon } from "@/utils/file-icons";
 import { formatFileSize } from "@/utils/format-file-size";
+import { FileScanStatusBadge } from "./file-scan-status-badge";
 
 interface File {
   id: string;
@@ -34,6 +35,7 @@ interface File {
   extension: string;
   size: number;
   objectName: string;
+  scanStatus?: "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR";
   userId: string;
   folderId?: string;
   createdAt: string;
@@ -806,6 +808,7 @@ export function FilesTable({
                               <span className="truncate max-w-[200px] font-medium" title={displayName}>
                                 {displayName}
                               </span>
+                              <FileScanStatusBadge scanStatus={file.scanStatus} />
                               <div className="w-6 flex justify-center flex-shrink-0">
                                 {isHoveringName && !isShareMode && (
                                   <Button

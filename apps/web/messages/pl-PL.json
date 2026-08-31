@@ -397,6 +397,11 @@
     "ariaLabel": "Tabela plików",
     "selectAll": "Zaznacz wszystko",
     "selectFile": "Wybierz plik {fileName}",
+    "scanStatus": {
+      "scanning": "Skanowanie antywirusowe w toku...",
+      "infected": "Zainfekowany: zablokowany przez skaner antywirusowy",
+      "error": "Skanowanie antywirusowe nie powiodło się"
+    },
     "columns": {
       "name": "NAZWA",
       "description": "OPIS",
@@ -1309,6 +1314,26 @@
         "daysSuffix": "dni przed usunięciem",
         "enabled": "Włączone"
       },
+      "avScanEnabled": {
+        "title": "Skanowanie antywirusowe",
+        "description": "Skanuj każdy wgrywany plik pod kątem złośliwego oprogramowania za pomocą serwera ClamAV. Pobieranie jest zablokowane, dopóki plik jest skanowany lub jeśli zostanie uznany za zainfekowany"
+      },
+      "avScanHost": {
+        "title": "Host ClamAV",
+        "description": "Nazwa hosta lub adres IP demona clamd (np. usługa \"clamav\" w docker-compose)"
+      },
+      "avScanPort": {
+        "title": "Port ClamAV",
+        "description": "Port TCP demona clamd (domyślnie: 3310)"
+      },
+      "avScanActionOnInfection": {
+        "title": "Akcja przy wykryciu infekcji",
+        "description": "Co zrobić, gdy plik zostanie uznany za zainfekowany: poddać kwarantannie (zachować, ale zablokować pobieranie) czy usunąć trwale",
+        "options": {
+          "quarantine": "Kwarantanna (zachowaj, zablokuj pobieranie)",
+          "delete": "Usuń trwale"
+        }
+      },
       "firstUserAccess": {
         "title": "Pierwszy dostęp użytkownika",
         "description": "Ustawienia pierwszego dostępu nowych użytkowników"
@@ -1420,7 +1445,9 @@
     "errors": {
       "invalidPassword": "Nieprawidłowe hasło. Spróbuj ponownie.",
       "loadFailed": "Nie udało się załadować udostępnienia",
-      "downloadFailed": "Nie udało się pobrać pliku"
+      "downloadFailed": "Nie udało się pobrać pliku",
+      "downloadBlockedInfected": "Ten plik został oznaczony jako zainfekowany przez skaner antywirusowy i nie można go pobrać",
+      "downloadBlockedScanning": "Ten plik jest wciąż skanowany w poszukiwaniu złośliwego oprogramowania. Spróbuj ponownie za chwilę"
     },
     "messages": {
       "downloadStarted": "Pobieranie rozpoczęte"

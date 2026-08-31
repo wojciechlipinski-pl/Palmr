@@ -56,9 +56,19 @@ model File {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Antivirus scan state: PENDING | SCANNING | CLEAN | INFECTED | ERROR.
+  // Set by the AV scan poller (see av-scan/service.ts); downloads/embeds are
+  // gated on this value whenever scanning is enabled (avScanEnabled config).
+  // Ignored entirely while scanning is disabled, so it never blocks anyone
+  // on an install that hasn't turned the feature on.
+  scanStatus String    @default("PENDING")
+  scanResult String? // threat name(s) reported by ClamAV, if any
+  scannedAt  DateTime?
+
   shares Share[] @relation("ShareFiles")
 
   @@index([folderId])
+  @@index([scanStatus])
   @@map("files")
 }
 
@@ -287,9 +297,15 @@ model ReverseShareFile {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // See File.scanStatus for semantics.
+  scanStatus String    @default("PENDING")
+  scanResult String?
+  scannedAt  DateTime?
+
   reverseShareId String
   reverseShare   ReverseShare @relation(fields: [reverseShareId], references: [id], onDelete: Cascade)
 
+  @@index([scanStatus])
   @@map("reverse_share_files")
 }
 

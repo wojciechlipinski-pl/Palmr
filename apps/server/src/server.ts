@@ -7,6 +7,7 @@ import { directoriesConfig } from "./config/directories.config";
 import { appRoutes } from "./modules/app/routes";
 import { authProvidersRoutes } from "./modules/auth-providers/routes";
 import { authRoutes } from "./modules/auth/routes";
+import { AvScanService } from "./modules/av-scan/service";
 import { ExpirationCleanupService } from "./modules/expiration-cleanup/service";
 import { fileRoutes } from "./modules/file/routes";
 import { folderRoutes } from "./modules/folder/routes";
@@ -96,6 +97,11 @@ async function startServer() {
   await expirationCleanupService.ensureDeletionNotificationSchedule();
   expirationCleanupService.start();
   console.log("🧹 Expiration cleanup service started (hourly, disabled unless enabled in Settings > Storage)");
+
+  const avScanService = new AvScanService();
+  await avScanService.ensureDefaultConfigs();
+  avScanService.start();
+  console.log("🛡️  Antivirus scan service started (every 20s, disabled unless enabled in Settings > Storage)");
 
   // Cleanup on shutdown
   process.on("SIGINT", () => process.exit(0));
