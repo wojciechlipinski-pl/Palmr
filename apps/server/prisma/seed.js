@@ -66,18 +66,11 @@ const defaultConfigs = [
     type: "number",
     group: "storage",
   },
-  {
-    key: "shareAutoDeleteFirstWarningDays",
-    value: "14",
-    type: "number",
-    group: "storage",
-  },
-  {
-    key: "shareAutoDeleteSecondWarningDays",
-    value: "3",
-    type: "number",
-    group: "storage",
-  },
+  // Note: the old shareAutoDeleteFirstWarningDays / shareAutoDeleteSecondWarningDays
+  // keys are intentionally no longer seeded - the configurable warning schedule now
+  // lives in the deletion_notification_schedules table (see
+  // ExpirationCleanupService.ensureDeletionNotificationSchedule for the migration
+  // that seeds it, including carrying forward these legacy keys' values on upgrade).
   // Security Configurations
   {
     key: "jwtSecret",

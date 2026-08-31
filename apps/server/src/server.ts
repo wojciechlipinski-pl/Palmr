@@ -93,6 +93,7 @@ async function startServer() {
 
   const expirationCleanupService = new ExpirationCleanupService();
   await expirationCleanupService.ensureDefaultConfigs();
+  await expirationCleanupService.ensureDeletionNotificationSchedule();
   expirationCleanupService.start();
   console.log("🧹 Expiration cleanup service started (hourly, disabled unless enabled in Settings > Storage)");
 

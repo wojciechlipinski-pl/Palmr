@@ -1301,6 +1301,14 @@
         "title": "Drugie powiadomienie e-mail (dni przed usunięciem)",
         "description": "Ile dni przed usunięciem wysłać do twórcy ostatnie powiadomienie e-mail. Musi być wcześniejsze niż pierwsze powiadomienie"
       },
+      "deletionNotificationSchedule": {
+        "title": "Harmonogram powiadomień o usunięciu",
+        "description": "Dodaj dowolną liczbę powiadomień e-mail, każde jako liczba dni przed trwałym usunięciem wygasłego lub przekroczonego limitem udostępnienia. Pozostaw pustą listę, aby nie wysyłać żadnych powiadomień.",
+        "empty": "Nie skonfigurowano żadnych powiadomień o usunięciu.",
+        "daysPlaceholder": "Dni przed usunięciem",
+        "daysSuffix": "dni przed usunięciem",
+        "enabled": "Włączone"
+      },
       "firstUserAccess": {
         "title": "Pierwszy dostęp użytkownika",
         "description": "Ustawienia pierwszego dostępu nowych użytkowników"
@@ -1372,7 +1380,9 @@
       "testSmtp": "Testuj połączenie",
       "testing": "Testowanie...",
       "previewEmail": "Podgląd",
-      "sendTestEmail": "Wyślij e-mail testowy do mnie"
+      "sendTestEmail": "Wyślij e-mail testowy do mnie",
+      "addDeletionWarning": "Dodaj powiadomienie",
+      "saveDeletionSchedule": "Zapisz harmonogram"
     },
     "errors": {
       "loadFailed": "Nie udało się załadować ustawień",
@@ -1381,6 +1391,11 @@
     },
     "messages": {
       "noChanges": "Brak zmian do zapisania",
+      "deletionScheduleLoadFailed": "Nie udało się załadować harmonogramu powiadomień o usunięciu",
+      "deletionSchedulePositiveInteger": "Każdy dzień powiadomienia musi być dodatnią liczbą całkowitą",
+      "deletionScheduleMaxDays": "Powiadomienia można zaplanować najwyżej {max} dni przed usunięciem",
+      "deletionScheduleDuplicate": "Zduplikowany dzień powiadomienia: {day}",
+      "deletionScheduleSaved": "Harmonogram powiadomień o usunięciu zapisany",
       "updateSuccess": "Ustawienia {group} zaktualizowane pomyślnie",
       "smtpTestFailed": "Połączenie SMTP nie powiodło się: {error}",
       "smtpTestGenericError": "Nie udało się przetestować połączenia SMTP. Sprawdź ustawienia i spróbuj ponownie.",

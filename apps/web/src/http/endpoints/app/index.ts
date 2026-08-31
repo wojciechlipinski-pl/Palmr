@@ -130,3 +130,41 @@ export const testShareNotificationEmailTemplate = (
 ): Promise<{ data: TestShareNotificationEmailResult }> => {
   return apiInstance.post(`/api/app/email-templates/share-notification/test`, body, options);
 };
+
+export interface DeletionNotificationSchedule {
+  id: string;
+  daysBeforeDeletion: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type GetDeletionNotificationSchedulesResult = { schedules: DeletionNotificationSchedule[] };
+export type ReplaceDeletionNotificationSchedulesResult = { schedules: DeletionNotificationSchedule[] };
+
+export interface ReplaceDeletionNotificationSchedulesBody {
+  schedules: { daysBeforeDeletion: number; enabled: boolean }[];
+}
+
+/**
+ * Lists the configured "send a warning email N days before deletion" thresholds
+ * for expired/limit-reached shares (admin only).
+ * @summary List deletion notification schedule entries
+ */
+export const getDeletionNotificationSchedules = (
+  options?: AxiosRequestConfig
+): Promise<{ data: GetDeletionNotificationSchedulesResult }> => {
+  return apiInstance.get(`/api/app/deletion-notification-schedules`, options);
+};
+
+/**
+ * Replaces the whole deletion notification schedule with the given list
+ * (admin only).
+ * @summary Replace the deletion notification schedule
+ */
+export const replaceDeletionNotificationSchedules = (
+  body: ReplaceDeletionNotificationSchedulesBody,
+  options?: AxiosRequestConfig
+): Promise<{ data: ReplaceDeletionNotificationSchedulesResult }> => {
+  return apiInstance.put(`/api/app/deletion-notification-schedules`, body, options);
+};

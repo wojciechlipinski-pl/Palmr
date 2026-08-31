@@ -223,6 +223,76 @@ export async function appRoutes(app: FastifyInstance) {
     appController.testSmtpConnection.bind(appController)
   );
 
+  app.get(
+    "/app/deletion-notification-schedules",
+    {
+      preValidation: adminPreValidation,
+      schema: {
+        tags: ["App"],
+        operationId: "getDeletionNotificationSchedules",
+        summary: "List deletion notification schedule entries",
+        description:
+          "Lists the configured 'send a warning email N days before deletion' thresholds for expired/limit-reached shares and reverse shares, ordered from furthest to closest to the deletion date. Requires admin privileges.",
+        response: {
+          200: z.object({
+            schedules: z.array(
+              z.object({
+                id: z.string(),
+                daysBeforeDeletion: z.number().describe("How many days before deletion this warning fires"),
+                enabled: z.boolean().describe("Whether this threshold is currently active"),
+                createdAt: z.date(),
+                updatedAt: z.date(),
+              })
+            ),
+          }),
+          400: z.object({ error: z.string().describe("Error message") }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    appController.getDeletionNotificationSchedules.bind(appController)
+  );
+
+  app.put(
+    "/app/deletion-notification-schedules",
+    {
+      preValidation: adminPreValidation,
+      schema: {
+        tags: ["App"],
+        operationId: "replaceDeletionNotificationSchedules",
+        summary: "Replace the deletion notification schedule",
+        description:
+          "Replaces the whole set of 'send a warning email N days before deletion' thresholds with the given list (an empty list disables all deletion warning emails). Each day must be a positive integer, unique, at most 30, and less than the deletion grace period. Requires admin privileges.",
+        body: z.object({
+          schedules: z.array(
+            z.object({
+              daysBeforeDeletion: z.number().int().positive().describe("How many days before deletion to warn"),
+              enabled: z.boolean().describe("Whether this threshold is active"),
+            })
+          ),
+        }),
+        response: {
+          200: z.object({
+            schedules: z.array(
+              z.object({
+                id: z.string(),
+                daysBeforeDeletion: z.number(),
+                enabled: z.boolean(),
+                createdAt: z.date(),
+                updatedAt: z.date(),
+              })
+            ),
+          }),
+          400: z.object({ error: z.string().describe("Error message") }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    appController.replaceDeletionNotificationSchedules.bind(appController)
+  );
+
   app.post(
     "/app/email-templates/share-notification/test",
     {
