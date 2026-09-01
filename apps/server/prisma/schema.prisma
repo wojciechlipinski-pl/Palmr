@@ -20,6 +20,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // When the password was last set. Defaults to "now" rather than backfilling
+  // from createdAt so that turning on passwordMaxAgeDays on an existing
+  // install doesn't immediately flag every pre-existing account as expired -
+  // everyone's age clock starts fresh from the day this column was added.
+  // Stamped explicitly on every password write (see AuthService.resetPassword,
+  // UserService.updateUser, AuthService.changeExpiredPassword); left alone on
+  // every other field update.
+  passwordChangedAt DateTime @default(now())
+
   twoFactorEnabled     Boolean @default(false)
   twoFactorSecret      String?
   twoFactorBackupCodes String?

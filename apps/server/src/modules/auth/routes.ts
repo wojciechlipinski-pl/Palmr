@@ -4,7 +4,12 @@ import { z } from "zod";
 import { ConfigService } from "../config/service";
 import { validatePasswordMiddleware } from "../user/middleware";
 import { AuthController } from "./controller";
-import { CompleteTwoFactorLoginSchema, createResetPasswordSchema, RequestPasswordResetSchema } from "./dto";
+import {
+  CompleteTwoFactorLoginSchema,
+  createChangeExpiredPasswordSchema,
+  createResetPasswordSchema,
+  RequestPasswordResetSchema,
+} from "./dto";
 
 const configService = new ConfigService();
 
@@ -51,12 +56,48 @@ export async function authRoutes(app: FastifyInstance) {
               userId: z.string().describe("User ID for 2FA verification"),
               message: z.string().describe("2FA required message"),
             }),
+            z.object({
+              requiresPasswordChange: z.boolean().describe("Whether the password has expired and must be changed"),
+              userId: z.string().describe("User ID for the password-change step"),
+              message: z.string().describe("Password expired message"),
+            }),
           ]),
           400: z.object({ error: z.string().describe("Error message") }),
         },
       },
     },
     authController.login.bind(authController)
+  );
+
+  app.post(
+    "/auth/change-expired-password",
+    {
+      schema: {
+        tags: ["Authentication"],
+        operationId: "changeExpiredPassword",
+        summary: "Change Expired Password",
+        description:
+          "Completes the login process by setting a new password after login() reported requiresPasswordChange, per the admin's password-age policy",
+        body: await createChangeExpiredPasswordSchema(),
+        response: {
+          200: z.object({
+            user: z.object({
+              id: z.string().describe("User ID"),
+              firstName: z.string().describe("User first name"),
+              lastName: z.string().describe("User last name"),
+              username: z.string().describe("User username"),
+              email: z.string().email().describe("User email"),
+              isAdmin: z.boolean().describe("User is admin"),
+              isActive: z.boolean().describe("User is active"),
+              createdAt: z.date().describe("User creation date"),
+              updatedAt: z.date().describe("User last update date"),
+            }),
+          }),
+          400: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    authController.changeExpiredPassword.bind(authController)
   );
 
   app.post(

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useAuth } from "@/contexts/auth-context";
-import { getAuthConfig, getCurrentUser, login } from "@/http/endpoints";
+import { changeExpiredPassword, getAuthConfig, getCurrentUser, login } from "@/http/endpoints";
 import { completeTwoFactorLogin } from "@/http/endpoints/auth/two-factor";
 import type { LoginResponse } from "@/http/endpoints/auth/two-factor/types";
 import { LoginFormValues } from "../schemas/schema";
@@ -30,6 +30,8 @@ export function useLogin() {
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const [twoFactorUserId, setTwoFactorUserId] = useState<string | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
+  const [expiredPasswordUserId, setExpiredPasswordUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordAuthEnabled, setPasswordAuthEnabled] = useState(true);
   const [authConfigLoading, setAuthConfigLoading] = useState(true);
@@ -102,6 +104,12 @@ export function useLogin() {
       if (loginData.requiresTwoFactor && loginData.userId) {
         setRequiresTwoFactor(true);
         setTwoFactorUserId(loginData.userId);
+        return;
+      }
+
+      if (loginData.requiresPasswordChange && loginData.userId) {
+        setRequiresPasswordChange(true);
+        setExpiredPasswordUserId(loginData.userId);
         return;
       }
 
@@ -186,6 +194,60 @@ export function useLogin() {
     }
   };
 
+  const onChangeExpiredPasswordSubmit = async (
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => {
+    if (!expiredPasswordUserId) {
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError(t("expiredPassword.errors.passwordsDoNotMatch"));
+      return;
+    }
+
+    setError(undefined);
+    setIsSubmitting(true);
+
+    try {
+      const response = await changeExpiredPassword({
+        userId: expiredPasswordUserId,
+        currentPassword,
+        newPassword,
+      });
+
+      try {
+        const userResponse = await getCurrentUser();
+        if (userResponse?.data?.user) {
+          const { isAdmin, ...userData } = userResponse.data.user;
+          setUser(userData);
+          setIsAdmin(isAdmin);
+          setIsAuthenticated(true);
+          router.replace("/dashboard");
+          return;
+        }
+      } catch (userErr) {
+        console.warn("Failed to fetch complete user data after password change, using response data:", userErr);
+      }
+
+      const { isAdmin, ...userData } = response.data.user;
+      setUser({ ...userData, image: null });
+      setIsAdmin(isAdmin);
+      setIsAuthenticated(true);
+      router.replace("/dashboard");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError(t("errors.unexpectedError"));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     isAuthenticated,
     error,
@@ -196,6 +258,8 @@ export function useLogin() {
     twoFactorCode,
     setTwoFactorCode,
     onTwoFactorSubmit,
+    requiresPasswordChange,
+    onChangeExpiredPasswordSubmit,
     isSubmitting,
     passwordAuthEnabled,
     authConfigLoading,

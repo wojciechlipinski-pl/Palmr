@@ -23,6 +23,7 @@
     "maxLoginAttempts",
     "loginBlockDuration",
     "passwordMinLength",
+    "passwordMaxAgeDays",
     "passwordAuthEnabled",
     "passwordResetTokenExpiration"
   ],

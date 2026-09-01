@@ -3,6 +3,8 @@ import type { AxiosRequestConfig } from "axios";
 import apiInstance from "@/config/api";
 import type {
   AuthProvider,
+  ChangeExpiredPasswordBody,
+  ChangeExpiredPasswordResult,
   CreateProviderResult,
   DeleteProviderResult,
   GetAllProvidersResult,
@@ -42,6 +44,13 @@ export const resetPassword = <TData = ResetPasswordResult>(
   options?: AxiosRequestConfig
 ): Promise<TData> => {
   return apiInstance.post(`/api/auth/reset-password`, resetPasswordBody, options);
+};
+
+export const changeExpiredPassword = <TData = ChangeExpiredPasswordResult>(
+  changeExpiredPasswordBody: ChangeExpiredPasswordBody,
+  options?: AxiosRequestConfig
+): Promise<TData> => {
+  return apiInstance.post(`/api/auth/change-expired-password`, changeExpiredPasswordBody, options);
 };
 
 export const getCurrentUser = <TData = GetCurrentUserResult>(options?: AxiosRequestConfig): Promise<TData> => {

@@ -17,6 +17,22 @@ export class AuthService {
   private twoFactorService = new TwoFactorService();
   private trustedDeviceService = new TrustedDeviceService();
 
+  /**
+   * Makes sure the passwordMaxAgeDays configuration row exists, even on an
+   * installation that was already running before this feature shipped (the
+   * container's startup script only re-seeds infra/configs.json into a
+   * brand-new database). Safe and idempotent to call on every boot.
+   */
+  async ensureDefaultConfigs() {
+    const existing = await prisma.appConfig.findUnique({ where: { key: "passwordMaxAgeDays" } });
+    if (!existing) {
+      await prisma.appConfig.create({
+        data: { key: "passwordMaxAgeDays", value: "0", type: "number", group: "security" },
+      });
+      console.log("[Auth] Seeded missing configuration: passwordMaxAgeDays");
+    }
+  }
+
   async login(data: LoginInput, userAgent?: string, ipAddress?: string) {
     const passwordAuthEnabled = await this.configService.getValue("passwordAuthEnabled");
     if (passwordAuthEnabled === "false") {
@@ -86,6 +102,21 @@ export class AuthService {
       });
     }
 
+    const maxAgeDays = Number(await this.configService.getValue("passwordMaxAgeDays"));
+    if (maxAgeDays > 0) {
+      const ageDays = (Date.now() - user.passwordChangedAt.getTime()) / (1000 * 60 * 60 * 24);
+      if (ageDays > maxAgeDays) {
+        // Same shape/no-cookie pattern as the requiresTwoFactor branch below -
+        // credentials are valid, but no session is issued until the admin's
+        // password-age policy is satisfied.
+        return {
+          requiresPasswordChange: true,
+          userId: user.id,
+          message: "Your password has expired and must be changed",
+        };
+      }
+    }
+
     const has2FA = await this.twoFactorService.isEnabled(user.id);
 
     if (has2FA) {
@@ -150,6 +181,39 @@ export class AuthService {
     return UserResponseSchema.parse(user);
   }
 
+  // Completes the "your password has expired" gate raised by login() when
+  // passwordMaxAgeDays is exceeded. Requires the current password (not just
+  // the userId) so this can't be used to reset an arbitrary account's
+  // password without knowing it - it's a forced rotation, not a bypass.
+  async changeExpiredPassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.isActive) {
+      throw new Error("Account is inactive. Please contact an administrator.");
+    }
+
+    if (!user.password) {
+      throw new Error("This account uses external authentication. Please use the appropriate login method.");
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      throw new Error("Current password is incorrect");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, passwordChangedAt: new Date() },
+    });
+
+    return UserResponseSchema.parse(updatedUser);
+  }
+
   async requestPasswordReset(email: string, origin: string) {
     const passwordAuthEnabled = await this.configService.getValue("passwordAuthEnabled");
     if (passwordAuthEnabled === "false") {
@@ -208,7 +272,7 @@ export class AuthService {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: resetRequest.userId },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, passwordChangedAt: new Date() },
       }),
       prisma.passwordReset.update({
         where: { id: resetRequest.id },

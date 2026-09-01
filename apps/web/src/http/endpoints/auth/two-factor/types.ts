@@ -71,6 +71,7 @@ export interface LoginResponse {
     updatedAt: string;
   };
   requiresTwoFactor?: boolean;
+  requiresPasswordChange?: boolean;
   userId?: string;
   message?: string;
 }

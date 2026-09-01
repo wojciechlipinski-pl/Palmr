@@ -62,6 +62,16 @@ export interface ResetPasswordBody {
   password: string;
 }
 
+export interface ChangeExpiredPasswordBody {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangeExpiredPassword200 {
+  user: LoginUser;
+}
+
 export interface AuthProvider {
   id: string;
   name: string;
@@ -119,6 +129,7 @@ export type AuthProviderOrderResponse = ApiMessageResponse;
 export type Logout200 = SimpleMessageResponse;
 export type RequestPasswordReset200 = SimpleMessageResponse;
 export type ResetPassword200 = SimpleMessageResponse;
+export type ChangeExpiredPasswordResult = AxiosResponse<ChangeExpiredPassword200>;
 
 export type GetEnabledProvidersResult = AxiosResponse<EnabledProvidersResponse>;
 export type GetAllProvidersResult = AxiosResponse<AuthProvidersResponse>;

@@ -4,6 +4,7 @@ import { env } from "../../env";
 import { ConfigService } from "../config/service";
 import {
   CompleteTwoFactorLoginSchema,
+  createChangeExpiredPasswordSchema,
   createResetPasswordSchema,
   LoginSchema,
   RequestPasswordResetSchema,
@@ -30,7 +31,7 @@ export class AuthController {
       const { userAgent, ipAddress } = this.getClientInfo(request);
       const result = await this.authService.login(input, userAgent, ipAddress);
 
-      if ("requiresTwoFactor" in result) {
+      if ("requiresTwoFactor" in result || "requiresPasswordChange" in result) {
         return reply.send(result);
       }
 
@@ -64,6 +65,30 @@ export class AuthController {
         userAgent,
         ipAddress
       );
+
+      const token = await request.jwtSign({
+        userId: user.id,
+        isAdmin: user.isAdmin,
+      });
+
+      reply.setCookie("token", token, {
+        httpOnly: true,
+        path: "/",
+        secure: env.SECURE_SITE === "true" ? true : false,
+        sameSite: env.SECURE_SITE === "true" ? "lax" : "strict",
+      });
+
+      return reply.send({ user });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
+  async changeExpiredPassword(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const schema = await createChangeExpiredPasswordSchema();
+      const input = schema.parse(request.body);
+      const user = await this.authService.changeExpiredPassword(input.userId, input.currentPassword, input.newPassword);
 
       const token = await request.jwtSign({
         userId: user.id,
