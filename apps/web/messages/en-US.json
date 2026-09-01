@@ -1308,7 +1308,7 @@
       },
       "smtpPass": {
         "title": "SMTP Password",
-        "description": "Password for SMTP authentication"
+        "description": "Password for SMTP authentication. Shown redacted once set - leave it as-is to keep the current password, or type a new one to replace it"
       },
       "smtpFromName": {
         "title": "Sender Name",

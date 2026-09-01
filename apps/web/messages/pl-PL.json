@@ -1257,7 +1257,7 @@
       },
       "smtpPass": {
         "title": "Hasło SMTP",
-        "description": "Hasło do uwierzytelniania SMTP"
+        "description": "Hasło do uwierzytelniania SMTP. Po ustawieniu wyświetlane jako zamaskowane - zostaw bez zmian, aby zachować obecne hasło, albo wpisz nowe, aby je zmienić"
       },
       "smtpFromName": {
         "title": "Nazwa nadawcy",
