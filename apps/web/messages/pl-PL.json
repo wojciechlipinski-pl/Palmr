@@ -1381,6 +1381,10 @@
         "title": "Ukryj Wersję",
         "description": "Ukryj wersję Palmr w stopce wszystkich stron"
       },
+      "shareDownloadNotificationEnabled": {
+        "title": "Powiadomienia o pobraniach",
+        "description": "Wyślij e-mail do twórcy udostępnienia, gdy ktoś pobierze jeden z jego udostępnionych plików"
+      },
       "shareNotificationEmailSubject": {
         "title": "Temat"
       },
@@ -1543,7 +1547,11 @@
     "loadError": "Nie udało się załadować szczegółów udostępnienia",
     "clickToEnlargeQrCode": "Kliknij, aby powiększyć kod QR",
     "downloadQrCode": "Pobierz kod QR",
-    "qrCode": "Kod QR"
+    "qrCode": "Kod QR",
+    "activity": "Aktywność",
+    "noActivity": "Brak aktywności",
+    "activityView": "Wyświetlono udostępnienie",
+    "activityDownload": "Pobrano {fileName}"
   },
   "shareExpiration": {
     "title": "Ustawienia wygaśnięcia udostępnienia",

@@ -7,6 +7,7 @@ import {
   IconDownload,
   IconEdit,
   IconExternalLink,
+  IconEye,
   IconLock,
   IconLockOpen,
   IconMail,
@@ -29,7 +30,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
-import { getShare } from "@/http/endpoints";
+import { getShare, getShareActivity } from "@/http/endpoints";
+import type { ShareActivity } from "@/http/endpoints/shares/types";
 import { getFileIcon } from "@/utils/file-icons";
 import { GenerateShareLinkModal } from "./generate-share-link-modal";
 import { QrCodeModal } from "./qr-code-modal";
@@ -91,6 +93,8 @@ export function ShareDetailsModal({
   const [showExpirationModal, setShowExpirationModal] = useState(false);
   const [showQrCodeModal, setShowQrCodeModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [activities, setActivities] = useState<ShareActivity[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const loadShareDetails = useCallback(async () => {
@@ -106,11 +110,25 @@ export function ShareDetailsModal({
     }
   }, [shareId, t]);
 
+  const loadShareActivity = useCallback(async () => {
+    if (!shareId) return;
+    setIsLoadingActivity(true);
+    try {
+      const response = await getShareActivity(shareId);
+      setActivities(response.data.activities);
+    } catch {
+      setActivities([]);
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  }, [shareId]);
+
   useEffect(() => {
     if (shareId) {
       loadShareDetails();
+      loadShareActivity();
     }
-  }, [shareId, loadShareDetails]);
+  }, [shareId, loadShareDetails, loadShareActivity]);
 
   useEffect(() => {
     if (editingField && inputRef.current) {
@@ -126,8 +144,9 @@ export function ShareDetailsModal({
   useEffect(() => {
     if (refreshTrigger) {
       loadShareDetails();
+      loadShareActivity();
     }
-  }, [refreshTrigger, loadShareDetails]);
+  }, [refreshTrigger, loadShareDetails, loadShareActivity]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return t("shareDetails.notAvailable");
@@ -636,6 +655,48 @@ export function ShareDetailsModal({
                     </div>
                   </div>
                 )}
+
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-foreground border-b pb-2">{t("shareDetails.activity")}</h3>
+                  {isLoadingActivity ? (
+                    <div className="flex justify-center py-4">
+                      <Loader size="sm" />
+                    </div>
+                  ) : activities.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">{t("shareDetails.noActivity")}</p>
+                  ) : (
+                    <div className="border rounded-lg bg-muted/10 p-2 max-h-40 overflow-y-auto">
+                      <div className="grid gap-1">
+                        {activities.map((activity) => {
+                          const activityFile = share.files?.find((f: ShareFile) => f.id === activity.fileId);
+                          return (
+                            <div
+                              key={activity.id}
+                              className="flex items-center gap-2 p-2 bg-background rounded border mr-2 text-xs"
+                            >
+                              {activity.type === "DOWNLOAD" ? (
+                                <IconDownload className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                              ) : (
+                                <IconEye className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium">
+                                  {activity.type === "DOWNLOAD"
+                                    ? t("shareDetails.activityDownload", { fileName: activityFile?.name || "" })
+                                    : t("shareDetails.activityView")}
+                                </span>
+                                <span className="text-muted-foreground ml-2">{formatDate(activity.createdAt)}</span>
+                                {activity.ipAddress && (
+                                  <span className="text-muted-foreground ml-2">{activity.ipAddress}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

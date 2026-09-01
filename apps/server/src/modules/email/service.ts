@@ -475,6 +475,78 @@ export class EmailService {
     });
   }
 
+  async sendShareDownloadNotification(
+    to: string,
+    fileName: string,
+    shareName: string | null,
+    ipAddress: string | null
+  ) {
+    const transporter = await this.createTransporter();
+    if (!transporter) {
+      throw new Error("SMTP is not enabled");
+    }
+
+    const fromName = await this.configService.getValue("smtpFromName");
+    const fromEmail = await this.configService.getValue("smtpFromEmail");
+    const appName = await this.configService.getValue("appName");
+
+    const title = shareName || "your share";
+    const when = new Date().toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject: `${appName} - "${fileName}" was downloaded`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${appName} - Download Notification</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5; color: #333333;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); overflow: hidden; margin-top: 40px; margin-bottom: 40px;">
+            <div style="background-color: #16A34A; padding: 30px 20px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">${appName}</h1>
+              <p style="margin: 2px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Download Notification</p>
+            </div>
+
+            <div style="padding: 40px 30px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h2 style="margin: 0 0 12px 0; color: #1f2937; font-size: 24px; font-weight: 600;">Your file was downloaded</h2>
+                <p style="margin: 0; color: #6b7280; font-size: 16px; line-height: 1.6;">
+                  <strong style="color: #374151;">${fileName}</strong> from ${title} was downloaded on ${when}${
+                    ipAddress ? ` from IP address <strong style="color: #374151;">${ipAddress}</strong>` : ""
+                  }.
+                </p>
+              </div>
+            </div>
+
+            <div style="background-color: #f9fafb; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                This email was sent by <strong>${appName}</strong>
+              </p>
+              <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
+                You can disable these notifications in Settings if you no longer want them.
+              </p>
+              <p style="margin: 4px 0 0 0; color: #9ca3af; font-size: 10px;">
+                Powered by <a href="https://kyantech.com.br" style="color: #9ca3af; text-decoration: none;">Kyantech Solutions</a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+  }
+
   async sendInfectedFileNotification(
     to: string,
     fileName: string,

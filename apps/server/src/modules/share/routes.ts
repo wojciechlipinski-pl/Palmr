@@ -349,6 +349,40 @@ export async function shareRoutes(app: FastifyInstance) {
   );
 
   app.get(
+    "/shares/:shareId/activity",
+    {
+      preValidation,
+      schema: {
+        tags: ["Share"],
+        operationId: "getShareActivity",
+        summary: "Get share activity log",
+        description: "Returns the view/download activity log for a share (creator only)",
+        params: z.object({
+          shareId: z.string().describe("The share ID"),
+        }),
+        response: {
+          200: z.object({
+            activities: z.array(
+              z.object({
+                id: z.string().describe("Activity ID"),
+                type: z.string().describe("VIEW or DOWNLOAD"),
+                fileId: z.string().nullable().describe("File ID, set for DOWNLOAD events"),
+                shareId: z.string().describe("Share ID"),
+                ipAddress: z.string().nullable().describe("IP address of the visitor"),
+                userAgent: z.string().nullable().describe("User agent of the visitor"),
+                createdAt: z.string().describe("When the event happened"),
+              })
+            ),
+          }),
+          401: z.object({ error: z.string() }),
+          404: z.object({ error: z.string() }),
+        },
+      },
+    },
+    shareController.getShareActivity.bind(shareController)
+  );
+
+  app.get(
     "/shares/alias/:alias/metadata",
     {
       schema: {

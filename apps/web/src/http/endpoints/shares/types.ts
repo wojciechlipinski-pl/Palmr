@@ -181,10 +181,25 @@ export interface GetShareParams {
   password?: string;
 }
 
+export interface ShareActivity {
+  id: string;
+  type: "VIEW" | "DOWNLOAD";
+  fileId: string | null;
+  shareId: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface GetShareActivity200 {
+  activities: ShareActivity[];
+}
+
 export interface GetShareByAliasParams {
   password?: string;
 }
 
+export type GetShareActivityResult = AxiosResponse<GetShareActivity200>;
 export type CreateShareResult = AxiosResponse<CreateShare201>;
 export type UpdateShareResult = AxiosResponse<UpdateShare200>;
 export type ListUserSharesResult = AxiosResponse<ListUserShares200>;

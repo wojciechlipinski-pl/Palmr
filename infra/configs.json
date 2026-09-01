@@ -39,7 +39,8 @@
     "smtpNoAuth",
     "smtpTrustSelfSigned",
     "shareNotificationEmailSubject",
-    "shareNotificationEmailBody"
+    "shareNotificationEmailBody",
+    "shareDownloadNotificationEnabled"
   ],
   "auth-providers": [
     "authProvidersEnabled"
