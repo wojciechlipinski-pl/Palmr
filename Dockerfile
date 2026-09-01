@@ -49,6 +49,13 @@ RUN npx prisma generate
 # Build server
 RUN pnpm build
 
+# Strip devDependencies (tsx/esbuild, typescript, eslint, prisma CLI, ts-node, ...)
+# from the node_modules that ship in the final image - the runtime only ever
+# runs `node dist/server.js` / `node prisma/seed.js`, so none of them are
+# needed there, and esbuild in particular bundles its own outdated Go runtime
+# that otherwise shows up as unnecessary CVEs in container scans.
+RUN pnpm prune --prod
+
 # === WEB BUILD STAGE ===
 FROM base AS web-deps
 WORKDIR /app/web
