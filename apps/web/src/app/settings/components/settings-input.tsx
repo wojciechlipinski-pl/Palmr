@@ -158,9 +158,7 @@ export function SettingsInput({
       <Input
         id={config.key}
         type={
-          config.key.toLowerCase().includes("password") || config.key.toLowerCase().includes("secret")
-            ? "password"
-            : "text"
+          config.key.toLowerCase().includes("pass") || config.key.toLowerCase().includes("secret") ? "password" : "text"
         }
         {...register(`configs.${config.key}`)}
         disabled={isDisabled}

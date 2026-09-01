@@ -15,6 +15,16 @@ const EMAIL_TEMPLATE_KEYS = ["shareNotificationEmailSubject", "shareNotification
 const MAX_EMAIL_TEMPLATE_SUBJECT_LENGTH = 200;
 const MAX_EMAIL_TEMPLATE_BODY_LENGTH = 50000;
 
+// Secret-valued configs that must never round-trip to the browser in plaintext
+// (see kyantech/Palmr#415). getAllConfigs() replaces their stored value with a
+// fixed-length placeholder (never the real value or its real length); the
+// update endpoints treat that same placeholder - or a blank submission - as
+// "admin didn't change this field" and leave the stored value untouched,
+// mirroring the existing "leave blank to keep current password" pattern used
+// for user passwords.
+const REDACTED_PASSWORD_KEYS = ["smtpPass"];
+const REDACTED_PASSWORD_PLACEHOLDER = "••••••••";
+
 export class AppService {
   private configService = new ConfigService();
   private emailService = new EmailService();
@@ -177,8 +187,16 @@ export class AppService {
     };
   }
 
+  // Applied to every response path that echoes AppConfig rows back to the
+  // browser (list, single update, bulk update) so a redacted field's
+  // plaintext value can never leak, no matter which endpoint returned it.
+  private redactConfig<T extends { key: string; value: string }>(config: T): T {
+    if (!REDACTED_PASSWORD_KEYS.includes(config.key)) return config;
+    return { ...config, value: config.value ? REDACTED_PASSWORD_PLACEHOLDER : "" };
+  }
+
   async getAllConfigs() {
-    return prisma.appConfig.findMany({
+    const configs = await prisma.appConfig.findMany({
       where: {
         key: {
           not: "jwtSecret",
@@ -188,6 +206,8 @@ export class AppService {
         group: "asc",
       },
     });
+
+    return configs.map((config) => this.redactConfig(config));
   }
 
   async getPublicConfigs() {
@@ -219,6 +239,14 @@ export class AppService {
       throw new Error("JWT Secret cannot be updated through this endpoint");
     }
 
+    if (REDACTED_PASSWORD_KEYS.includes(key) && (value === "" || value === REDACTED_PASSWORD_PLACEHOLDER)) {
+      const config = await prisma.appConfig.findUnique({ where: { key } });
+      if (!config) {
+        throw new Error("Configuration not found");
+      }
+      return this.redactConfig(config);
+    }
+
     if (key === "passwordAuthEnabled") {
       if (value === "false") {
         const canDisable = await this.configService.validatePasswordAuthDisable();
@@ -247,16 +275,31 @@ export class AppService {
       throw new Error("Configuration not found");
     }
 
-    return prisma.appConfig.update({
+    const updated = await prisma.appConfig.update({
       where: { key },
       data: { value: sanitizedValue },
     });
+
+    return this.redactConfig(updated);
   }
 
   async bulkUpdateConfigs(updates: Array<{ key: string; value: string }>) {
     if (updates.some((update) => update.key === "jwtSecret")) {
       throw new Error("JWT Secret cannot be updated through this endpoint");
     }
+
+    // Drop redacted-password fields the admin left untouched (blank, or still
+    // showing our placeholder) so they never overwrite the real stored value.
+    updates = updates.filter(
+      (update) =>
+        !REDACTED_PASSWORD_KEYS.includes(update.key) ||
+        (update.value !== "" && update.value !== REDACTED_PASSWORD_PLACEHOLDER)
+    );
+
+    if (updates.length === 0) {
+      return [];
+    }
+
     const passwordAuthUpdate = updates.find((update) => update.key === "passwordAuthEnabled");
     if (passwordAuthUpdate && passwordAuthUpdate.value === "false") {
       const canDisable = await this.configService.validatePasswordAuthDisable();
@@ -294,7 +337,7 @@ export class AppService {
         : update.value,
     }));
 
-    return prisma.$transaction(
+    const updated = await prisma.$transaction(
       sanitizedUpdates.map((update) =>
         prisma.appConfig.update({
           where: { key: update.key },
@@ -302,5 +345,7 @@ export class AppService {
         })
       )
     );
+
+    return updated.map((config) => this.redactConfig(config));
   }
 }
