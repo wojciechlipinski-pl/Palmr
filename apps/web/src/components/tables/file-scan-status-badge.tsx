@@ -1,16 +1,17 @@
 import { IconAlertTriangle, IconLoader2, IconShieldX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-type FileScanStatus = "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR";
+type FileScanStatus = "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR" | "SKIPPED_TOO_LARGE";
 
 interface FileScanStatusBadgeProps {
   scanStatus?: FileScanStatus | null;
 }
 
-// Silent for PENDING/CLEAN: PENDING is the steady state for every file on an
-// install that hasn't turned antivirus scanning on, so showing a badge for it
-// would put a permanent "pending" pill on every single file. Only surface the
-// states that carry real signal once the scan has actually run.
+// Silent for PENDING/CLEAN/SKIPPED_TOO_LARGE: PENDING is the steady state for
+// every file on an install that hasn't turned antivirus scanning on, so
+// showing a badge for it would put a permanent "pending" pill on every single
+// file. SKIPPED_TOO_LARGE is functionally the same as CLEAN (download
+// allowed). Only surface the states that carry real signal.
 export function FileScanStatusBadge({ scanStatus }: FileScanStatusBadgeProps) {
   const t = useTranslations();
 

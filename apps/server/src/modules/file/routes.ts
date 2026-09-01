@@ -61,7 +61,9 @@ export async function fileRoutes(app: FastifyInstance) {
               extension: z.string().describe("The file extension"),
               size: z.string().describe("The file size"),
               objectName: z.string().describe("The object name of the file"),
-              scanStatus: z.string().describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, or ERROR"),
+              scanStatus: z
+                .string()
+                .describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, ERROR, or SKIPPED_TOO_LARGE"),
               userId: z.string().describe("The user ID"),
               folderId: z.string().nullable().describe("The folder ID"),
               createdAt: z.date().describe("The file creation date"),
@@ -192,7 +194,9 @@ export async function fileRoutes(app: FastifyInstance) {
                 extension: z.string().describe("The file extension"),
                 size: z.string().describe("The file size"),
                 objectName: z.string().describe("The object name of the file"),
-                scanStatus: z.string().describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, or ERROR"),
+                scanStatus: z
+                  .string()
+                  .describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, ERROR, or SKIPPED_TOO_LARGE"),
                 userId: z.string().describe("The user ID"),
                 folderId: z.string().nullable().describe("The folder ID"),
                 relativePath: z.string().nullable().describe("The relative path (only for recursive listing)"),
@@ -230,7 +234,9 @@ export async function fileRoutes(app: FastifyInstance) {
               extension: z.string().describe("The file extension"),
               size: z.string().describe("The file size"),
               objectName: z.string().describe("The object name of the file"),
-              scanStatus: z.string().describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, or ERROR"),
+              scanStatus: z
+                .string()
+                .describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, ERROR, or SKIPPED_TOO_LARGE"),
               userId: z.string().describe("The user ID"),
               folderId: z.string().nullable().describe("The folder ID"),
               createdAt: z.date().describe("The file creation date"),
@@ -270,7 +276,9 @@ export async function fileRoutes(app: FastifyInstance) {
               extension: z.string().describe("The file extension"),
               size: z.string().describe("The file size"),
               objectName: z.string().describe("The object name of the file"),
-              scanStatus: z.string().describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, or ERROR"),
+              scanStatus: z
+                .string()
+                .describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, ERROR, or SKIPPED_TOO_LARGE"),
               userId: z.string().describe("The user ID"),
               folderId: z.string().nullable().describe("The folder ID"),
               createdAt: z.date().describe("The file creation date"),

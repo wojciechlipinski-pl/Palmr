@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 
-export type FileScanStatus = "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR";
+export type FileScanStatus = "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR" | "SKIPPED_TOO_LARGE";
 
 export interface FileItem {
   id: string;

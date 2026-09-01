@@ -1407,6 +1407,10 @@
           "delete": "Delete permanently"
         }
       },
+      "avScanMaxFileSize": {
+        "title": "Maximum Scanned File Size",
+        "description": "Files larger than this are not scanned and remain downloadable as normal. Set to 0 for no limit"
+      },
       "firstUserAccess": {
         "title": "First User Access",
         "description": "Settings for first access of new users"

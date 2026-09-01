@@ -39,7 +39,7 @@ interface File {
   extension: string;
   size: number;
   objectName: string;
-  scanStatus?: "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR";
+  scanStatus?: "PENDING" | "SCANNING" | "CLEAN" | "INFECTED" | "ERROR" | "SKIPPED_TOO_LARGE";
   userId: string;
   folderId?: string;
   createdAt: string;

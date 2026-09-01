@@ -14,13 +14,24 @@ export const AV_SCAN_DEFAULTS: Array<{ key: string; value: string; type: string;
   { key: "avScanHost", value: "clamav", type: "string", group: "storage" },
   { key: "avScanPort", value: "3310", type: "number", group: "storage" },
   { key: "avScanActionOnInfection", value: "quarantine", type: "string", group: "storage" },
+  // 100MB default - large enough for typical documents/media, small enough that
+  // streaming a file through clamd doesn't stall the poller for long.
+  { key: "avScanMaxFileSize", value: "104857600", type: "bigint", group: "storage" },
 ];
 
-type ScannableFile = { id: string; name: string; objectName: string; userId: string; user: { email: string } };
+type ScannableFile = {
+  id: string;
+  name: string;
+  objectName: string;
+  size: bigint;
+  userId: string;
+  user: { email: string };
+};
 type ScannableReverseShareFile = {
   id: string;
   name: string;
   objectName: string;
+  size: bigint;
   reverseShare: { creator: { email: string } };
 };
 
@@ -123,7 +134,7 @@ export class AvScanService {
       where: { scanStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       take: BATCH_SIZE,
-      select: { id: true, name: true, objectName: true, userId: true, user: { select: { email: true } } },
+      select: { id: true, name: true, objectName: true, size: true, userId: true, user: { select: { email: true } } },
     });
 
     for (const file of pending) {
@@ -140,6 +151,7 @@ export class AvScanService {
         id: true,
         name: true,
         objectName: true,
+        size: true,
         reverseShare: { select: { creator: { select: { email: true } } } },
       },
     });
@@ -157,6 +169,14 @@ export class AvScanService {
       data: { scanStatus: "SCANNING" },
     });
     if (claimed.count === 0) return; // already claimed by another cycle
+
+    if (await this.exceedsMaxScanSize(file.size)) {
+      await prisma.file.update({
+        where: { id: file.id },
+        data: { scanStatus: "SKIPPED_TOO_LARGE", scannedAt: new Date() },
+      });
+      return;
+    }
 
     try {
       const result = await this.scanObject(clam, file.objectName);
@@ -203,6 +223,14 @@ export class AvScanService {
     });
     if (claimed.count === 0) return;
 
+    if (await this.exceedsMaxScanSize(file.size)) {
+      await prisma.reverseShareFile.update({
+        where: { id: file.id },
+        data: { scanStatus: "SKIPPED_TOO_LARGE", scannedAt: new Date() },
+      });
+      return;
+    }
+
     try {
       const result = await this.scanObject(clam, file.objectName);
 
@@ -241,6 +269,12 @@ export class AvScanService {
         .update({ where: { id: file.id }, data: { scanStatus: "ERROR", scannedAt: new Date() } })
         .catch(() => {});
     }
+  }
+
+  private async exceedsMaxScanSize(size: bigint): Promise<boolean> {
+    const maxSize = BigInt(await this.configService.getValue("avScanMaxFileSize"));
+    if (maxSize <= BigInt(0)) return false; // 0/unset means no limit
+    return size > maxSize;
   }
 
   private async scanObject(clam: NodeClam, objectName: string): Promise<{ isInfected: boolean; viruses: string[] }> {
