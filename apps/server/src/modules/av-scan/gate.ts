@@ -14,7 +14,10 @@ export type ScanGateResult = { allowed: boolean; reason?: "infected" | "pending"
 export async function checkScanGate(scanStatus: string): Promise<ScanGateResult> {
   const enabled = (await configService.getValue("avScanEnabled")) === "true";
   if (!enabled) return { allowed: true };
-  if (scanStatus === "CLEAN") return { allowed: true };
+  // CLEAN: scanned, no threat found. SKIPPED_TOO_LARGE: admin chose not to
+  // scan files above the configured size limit at all, so it's treated the
+  // same as never having enabled scanning for that file.
+  if (scanStatus === "CLEAN" || scanStatus === "SKIPPED_TOO_LARGE") return { allowed: true };
   if (scanStatus === "INFECTED") return { allowed: false, reason: "infected" };
   return { allowed: false, reason: "pending" }; // PENDING / SCANNING / ERROR
 }

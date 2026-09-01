@@ -1334,6 +1334,10 @@
           "delete": "Usuń trwale"
         }
       },
+      "avScanMaxFileSize": {
+        "title": "Maksymalny rozmiar skanowanego pliku",
+        "description": "Pliki większe niż ten limit nie są skanowane i pozostają normalnie dostępne do pobrania. Ustaw 0, aby nie stosować limitu"
+      },
       "firstUserAccess": {
         "title": "Pierwszy dostęp użytkownika",
         "description": "Ustawienia pierwszego dostępu nowych użytkowników"

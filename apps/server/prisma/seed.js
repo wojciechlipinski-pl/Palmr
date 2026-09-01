@@ -90,6 +90,12 @@ const defaultConfigs = [
     type: "string",
     group: "storage",
   },
+  {
+    key: "avScanMaxFileSize",
+    value: "104857600", // 100MB in bytes
+    type: "bigint",
+    group: "storage",
+  },
   // Note: the old shareAutoDeleteFirstWarningDays / shareAutoDeleteSecondWarningDays
   // keys are intentionally no longer seeded - the configurable warning schedule now
   // lives in the deletion_notification_schedules table (see

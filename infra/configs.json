@@ -15,7 +15,8 @@
     "avScanEnabled",
     "avScanHost",
     "avScanPort",
-    "avScanActionOnInfection"
+    "avScanActionOnInfection",
+    "avScanMaxFileSize"
   ],
   "security": [
     "jwtSecret",
