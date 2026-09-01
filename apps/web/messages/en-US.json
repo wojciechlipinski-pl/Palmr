@@ -575,6 +575,7 @@
     "customization": "Customization",
     "settings": "Settings",
     "usersManagement": "User Management",
+    "filesManagement": "File Management",
     "logout": "Log Out"
   },
   "navigation": {
@@ -1975,6 +1976,33 @@
       "cancel": "Cancel Uploads"
     },
     "pasteSuccess": "{count, plural, =1 {Image pasted and uploaded successfully} other {# images pasted and uploaded successfully}}"
+  },
+  "filesManagement": {
+    "header": {
+      "title": "File Management ({count})",
+      "management": "File Management",
+      "searchPlaceholder": "Search by file name or owner..."
+    },
+    "table": {
+      "name": "NAME",
+      "owner": "OWNER",
+      "size": "SIZE",
+      "createdAt": "UPLOADED",
+      "actions": "ACTIONS",
+      "delete": "Delete file"
+    },
+    "delete": {
+      "title": "Confirm Delete File",
+      "confirmation": "Are you sure you want to delete \"{name}\" (uploaded by {owner})? This action cannot be undone.",
+      "confirm": "Delete File"
+    },
+    "errors": {
+      "loadFailed": "Failed to load files",
+      "deleteFailed": "Failed to delete file"
+    },
+    "messages": {
+      "deleteSuccess": "File deleted successfully"
+    }
   },
   "users": {
     "modes": {
