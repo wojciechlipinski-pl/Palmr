@@ -4,7 +4,7 @@
 
 set -e
 
-MINIO_VERSION="RELEASE.2024-10-13T13-34-11Z"
+MINIO_VERSION="RELEASE.2025-09-07T16-13-09Z"
 ARCH=$(uname -m)
 
 echo "[BUILD] Downloading storage system ${MINIO_VERSION} for ${ARCH}..."
