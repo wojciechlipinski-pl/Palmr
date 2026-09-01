@@ -4,6 +4,7 @@ import apiInstance from "@/config/api";
 import type {
   AbortMultipartUploadBody,
   AbortMultipartUploadResult,
+  AdminDeleteFileResult,
   CheckFileBody,
   CheckFileResult,
   CompleteMultipartUploadBody,
@@ -16,6 +17,7 @@ import type {
   GetMultipartPartUrlResult,
   GetPresignedUrlParams,
   GetPresignedUrlResult,
+  ListAllFilesResult,
   ListFilesResult,
   MoveFileBody,
   MoveFileResult,
@@ -78,6 +80,25 @@ export const listFiles = <TData = ListFilesResult>(
     ...options,
     params: { ...queryParams, ...options?.params },
   });
+};
+
+/**
+ * Lists every file uploaded by every user, with owner details (admin only)
+ * @summary List All Files (Admin)
+ */
+export const listAllFiles = <TData = ListAllFilesResult>(options?: AxiosRequestConfig): Promise<TData> => {
+  return apiInstance.get(`/api/files/admin`, options);
+};
+
+/**
+ * Deletes any user's file, bypassing ownership checks (admin only)
+ * @summary Delete Any File (Admin)
+ */
+export const adminDeleteFile = <TData = AdminDeleteFileResult>(
+  id: string,
+  options?: AxiosRequestConfig
+): Promise<TData> => {
+  return apiInstance.delete(`/api/files/admin/${id}`, options);
 };
 
 /**

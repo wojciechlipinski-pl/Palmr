@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IconLogout, IconPalette, IconSettings, IconUser, IconUsers } from "@tabler/icons-react";
+import { IconFiles, IconLogout, IconPalette, IconSettings, IconUser, IconUsers } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { LanguageSwitcher } from "@/components/general/language-switcher";
@@ -106,6 +106,12 @@ export function Navbar() {
                       <Link href="/users-management" className="flex items-center gap-2 cursor-pointer">
                         <IconUsers className="h-4 w-4" />
                         {t("navbar.usersManagement")}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/files-management" className="flex items-center gap-2 cursor-pointer">
+                        <IconFiles className="h-4 w-4" />
+                        {t("navbar.filesManagement")}
                       </Link>
                     </DropdownMenuItem>
                   </>

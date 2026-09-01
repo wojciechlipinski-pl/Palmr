@@ -50,6 +50,32 @@ export interface ListFiles200 {
   files: FileItem[];
 }
 
+export interface FileOwner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+}
+
+export interface AdminFileItem {
+  id: string;
+  name: string;
+  description: string | null;
+  extension: string;
+  size: string;
+  objectName: string;
+  scanStatus?: FileScanStatus;
+  folderId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  owner: FileOwner;
+}
+
+export interface ListAllFiles200 {
+  files: AdminFileItem[];
+}
+
 export type CheckFileBody = FileOperationRequest;
 export type RegisterFileBody = FileOperationRequest;
 
@@ -128,6 +154,8 @@ export type GetPresignedUrlResult = AxiosResponse<GetPresignedUrl200>;
 export type RegisterFileResult = AxiosResponse<RegisterFile201>;
 export type CheckFileResult = AxiosResponse<CheckFile201>;
 export type ListFilesResult = AxiosResponse<ListFiles200>;
+export type ListAllFilesResult = AxiosResponse<ListAllFiles200>;
+export type AdminDeleteFileResult = AxiosResponse<DeleteFile200>;
 export type GetDownloadUrlResult = AxiosResponse<GetDownloadUrl200>;
 export type DeleteFileResult = AxiosResponse<DeleteFile200>;
 export type UpdateFileResult = AxiosResponse<UpdateFile200>;

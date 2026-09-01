@@ -570,6 +570,7 @@
     "profile": "Profil",
     "settings": "Ustawienia",
     "usersManagement": "Zarządzanie użytkownikami",
+    "filesManagement": "Zarządzanie plikami",
     "logout": "Wyloguj się",
     "customization": "Dostosowanie"
   },
@@ -1944,6 +1945,33 @@
     },
     "pasteSuccess": "{count, plural, =1 {Obraz wklejony i przesłany pomyślnie} other {# obrazy wklejone i przesłane pomyślnie}}",
     "filesQueued": "{count, plural, one {# plik w kolejce do przesyłania} other {# pliki w kolejce do przesyłania}}"
+  },
+  "filesManagement": {
+    "header": {
+      "title": "Zarządzanie plikami ({count})",
+      "management": "Zarządzanie plikami",
+      "searchPlaceholder": "Szukaj po nazwie pliku lub właścicielu..."
+    },
+    "table": {
+      "name": "NAZWA",
+      "owner": "WŁAŚCICIEL",
+      "size": "ROZMIAR",
+      "createdAt": "WGRANO",
+      "actions": "AKCJE",
+      "delete": "Usuń plik"
+    },
+    "delete": {
+      "title": "Potwierdź usunięcie pliku",
+      "confirmation": "Czy na pewno chcesz usunąć \"{name}\" (wgrany przez {owner})? Tej operacji nie można cofnąć.",
+      "confirm": "Usuń plik"
+    },
+    "errors": {
+      "loadFailed": "Nie udało się wczytać plików",
+      "deleteFailed": "Nie udało się usunąć pliku"
+    },
+    "messages": {
+      "deleteSuccess": "Plik został usunięty"
+    }
   },
   "users": {
     "modes": {

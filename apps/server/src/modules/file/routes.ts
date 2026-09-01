@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 
+import { prisma } from "../../shared/prisma";
 import { FileController } from "./controller";
 import { CheckFileSchema, ListFilesSchema, MoveFileSchema, RegisterFileSchema, UpdateFileSchema } from "./dto";
 
@@ -13,6 +14,29 @@ export async function fileRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error(err);
       reply.status(401).send({ error: "Token inválido ou ausente." });
+    }
+  };
+
+  // Mirrors the admin gate used by user/routes.ts - allows through only when
+  // the requester is an authenticated admin.
+  const adminPreValidation = async (request: any, reply: any) => {
+    try {
+      const usersCount = await prisma.user.count();
+
+      if (usersCount > 0) {
+        try {
+          await request.jwtVerify();
+          if (!request.user.isAdmin) {
+            return reply.status(403).send({ error: "Access restricted to administrators" });
+          }
+        } catch (authErr) {
+          console.error(authErr);
+          return reply.status(401).send({ error: "Unauthorized: a valid token is required to access this resource." });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      return reply.status(500).send({ error: "Internal server error" });
     }
   };
 
@@ -320,6 +344,77 @@ export async function fileRoutes(app: FastifyInstance) {
       },
     },
     fileController.deleteFile.bind(fileController)
+  );
+
+  app.get(
+    "/files/admin",
+    {
+      preValidation: adminPreValidation,
+      schema: {
+        tags: ["File"],
+        operationId: "listAllFiles",
+        summary: "List All Files (Admin)",
+        description: "Lists every file uploaded by every user, with owner details (admin only)",
+        response: {
+          200: z.object({
+            files: z.array(
+              z.object({
+                id: z.string().describe("The file ID"),
+                name: z.string().describe("The file name"),
+                description: z.string().nullable().describe("The file description"),
+                extension: z.string().describe("The file extension"),
+                size: z.string().describe("The file size"),
+                objectName: z.string().describe("The object name of the file"),
+                scanStatus: z
+                  .string()
+                  .describe("Antivirus scan status: PENDING, SCANNING, CLEAN, INFECTED, ERROR, or SKIPPED_TOO_LARGE"),
+                folderId: z.string().nullable().describe("The folder ID"),
+                createdAt: z.date().describe("The file creation date"),
+                updatedAt: z.date().describe("The file last update date"),
+                owner: z.object({
+                  id: z.string().describe("Owner user ID"),
+                  firstName: z.string().describe("Owner first name"),
+                  lastName: z.string().describe("Owner last name"),
+                  username: z.string().describe("Owner username"),
+                  email: z.string().email().describe("Owner email"),
+                }),
+              })
+            ),
+          }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+          500: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    fileController.listAllFiles.bind(fileController)
+  );
+
+  app.delete(
+    "/files/admin/:id",
+    {
+      preValidation: adminPreValidation,
+      schema: {
+        tags: ["File"],
+        operationId: "adminDeleteFile",
+        summary: "Delete Any File (Admin)",
+        description: "Deletes any user's file, bypassing ownership checks (admin only)",
+        params: z.object({
+          id: z.string().min(1, "The file id is required").describe("The file ID"),
+        }),
+        response: {
+          200: z.object({
+            message: z.string().describe("The file deletion message"),
+          }),
+          400: z.object({ error: z.string().describe("Error message") }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+          404: z.object({ error: z.string().describe("Error message") }),
+          500: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    fileController.adminDeleteFile.bind(fileController)
   );
 
   // Multipart upload routes
