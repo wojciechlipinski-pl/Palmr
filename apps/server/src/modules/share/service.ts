@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 
 import { prisma } from "../../shared/prisma";
+import { ConfigService } from "../config/service";
 import { EmailService } from "../email/service";
 import { FolderService } from "../folder/service";
 import { UserService } from "../user/service";
@@ -13,6 +14,22 @@ export class ShareService {
   private emailService = new EmailService();
   private userService = new UserService();
   private folderService = new FolderService();
+  private configService = new ConfigService();
+
+  /**
+   * Makes sure the shareDownloadNotificationEnabled configuration row exists,
+   * even on an installation that was already running before this feature
+   * shipped. Safe and idempotent to call on every boot.
+   */
+  async ensureDefaultConfigs() {
+    const existing = await prisma.appConfig.findUnique({ where: { key: "shareDownloadNotificationEnabled" } });
+    if (!existing) {
+      await prisma.appConfig.create({
+        data: { key: "shareDownloadNotificationEnabled", value: "false", type: "boolean", group: "email" },
+      });
+      console.log("[Share] Seeded missing configuration: shareDownloadNotificationEnabled");
+    }
+  }
 
   private async formatShareResponse(share: any) {
     return {
@@ -113,7 +130,7 @@ export class ShareService {
     return ShareResponseSchema.parse(await this.formatShareResponse(shareWithRelations));
   }
 
-  async getShare(shareId: string, password?: string, userId?: string) {
+  async getShare(shareId: string, password?: string, userId?: string, ipAddress?: string, userAgent?: string) {
     const share = await this.shareRepository.findShareById(shareId);
 
     if (!share) {
@@ -144,6 +161,10 @@ export class ShareService {
     }
 
     const incrementedShare = await this.shareRepository.incrementViews(shareId);
+
+    await prisma.shareActivity.create({
+      data: { shareId, type: "VIEW", ipAddress: ipAddress || null, userAgent: userAgent || null },
+    });
 
     // Record the moment the view limit is first reached, so the expiration
     // cleanup service can count the auto-delete grace period from a fixed
@@ -385,7 +406,7 @@ export class ShareService {
     };
   }
 
-  async getShareByAlias(alias: string, password?: string) {
+  async getShareByAlias(alias: string, password?: string, userId?: string, ipAddress?: string, userAgent?: string) {
     const shareAlias = await prisma.shareAlias.findUnique({
       where: { alias },
       include: {
@@ -403,7 +424,7 @@ export class ShareService {
       throw new Error("Share not found");
     }
 
-    return this.getShare(shareAlias.shareId, password);
+    return this.getShare(shareAlias.shareId, password, userId, ipAddress, userAgent);
   }
 
   async notifyRecipients(shareId: string, userId: string, shareLink: string) {
@@ -461,6 +482,58 @@ export class ShareService {
       message: `Successfully sent notifications to ${notifiedRecipients.length} recipients`,
       notifiedRecipients,
     };
+  }
+
+  // Called from FileController.getDownloadUrl whenever a file is downloaded
+  // via share access (not the owner's own authenticated session). Records
+  // the activity and, if enabled, emails the share creator - fire-and-forget,
+  // a notification failure must never block the download itself.
+  async recordDownload(shareId: string, fileId: string, ipAddress?: string, userAgent?: string) {
+    await prisma.shareActivity.create({
+      data: { shareId, type: "DOWNLOAD", fileId, ipAddress: ipAddress || null, userAgent: userAgent || null },
+    });
+
+    try {
+      const notificationsEnabled = await this.configService.getValue("shareDownloadNotificationEnabled");
+      if (notificationsEnabled !== "true") return;
+
+      const share = await prisma.share.findUnique({
+        where: { id: shareId },
+        include: { creator: true, files: { where: { id: fileId } } },
+      });
+      if (!share?.creator?.email) return;
+
+      const file = share.files[0];
+      await this.emailService.sendShareDownloadNotification(
+        share.creator.email,
+        file?.name || "A file",
+        share.name,
+        ipAddress || null
+      );
+    } catch (error) {
+      console.error(`Failed to send download notification for share ${shareId}:`, error);
+    }
+  }
+
+  async getShareActivity(shareId: string, userId: string) {
+    const share = await this.shareRepository.findShareById(shareId);
+    if (!share) {
+      throw new Error("Share not found");
+    }
+    if (share.creatorId !== userId) {
+      throw new Error("Unauthorized to access this share");
+    }
+
+    const activities = await prisma.shareActivity.findMany({
+      where: { shareId },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    });
+
+    return activities.map((a) => ({
+      ...a,
+      createdAt: a.createdAt.toISOString(),
+    }));
   }
 
   async getShareMetadataByAlias(alias: string) {

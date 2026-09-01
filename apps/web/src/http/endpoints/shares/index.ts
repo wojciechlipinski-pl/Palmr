@@ -11,6 +11,7 @@ import type {
   CreateShareBody,
   CreateShareResult,
   DeleteShareResult,
+  GetShareActivityResult,
   GetShareByAliasParams,
   GetShareByAliasResult,
   GetShareParams,
@@ -71,6 +72,13 @@ export const getShare = <TData = GetShareResult>(
     ...options,
     params: { ...params, ...options?.params },
   });
+};
+
+export const getShareActivity = <TData = GetShareActivityResult>(
+  shareId: string,
+  options?: AxiosRequestConfig
+): Promise<TData> => {
+  return apiInstance.get(`/api/shares/${shareId}/activity`, options);
 };
 
 /**

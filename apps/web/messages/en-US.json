@@ -1428,6 +1428,10 @@
         "title": "Password Authentication",
         "description": "Enable or disable password-based authentication"
       },
+      "shareDownloadNotificationEnabled": {
+        "title": "Download Notifications",
+        "description": "Email the share creator whenever someone downloads one of their shared files"
+      },
       "shareNotificationEmailSubject": {
         "title": "Subject"
       },
@@ -1590,7 +1594,11 @@
     "qrCode": "QR Code",
     "downloadQrCode": "Download QR Code",
     "clickToEnlargeQrCode": "Click to enlarge QR Code",
-    "loadError": "Failed to load share details"
+    "loadError": "Failed to load share details",
+    "activity": "Activity",
+    "noActivity": "No activity yet",
+    "activityView": "Share viewed",
+    "activityDownload": "Downloaded {fileName}"
   },
   "shareExpiration": {
     "title": "Share Expiration Settings",

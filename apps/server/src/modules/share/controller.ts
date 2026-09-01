@@ -12,6 +12,13 @@ import { ShareService } from "./service";
 export class ShareController {
   private shareService = new ShareService();
 
+  private getClientInfo(request: FastifyRequest) {
+    const realIP = request.headers["x-real-ip"] as string;
+    const ipAddress = realIP || request.ip || request.socket.remoteAddress || "";
+    const userAgent = (request.headers["user-agent"] as string) || "";
+    return { ipAddress, userAgent };
+  }
+
   async createShare(request: FastifyRequest, reply: FastifyReply) {
     try {
       await request.jwtVerify();
@@ -60,7 +67,8 @@ export class ShareController {
         console.error(err);
       }
 
-      const share = await this.shareService.getShare(shareId, password, userId);
+      const { ipAddress, userAgent } = this.getClientInfo(request);
+      const share = await this.shareService.getShare(shareId, password, userId, ipAddress, userAgent);
       return reply.send({ share });
     } catch (error: any) {
       if (error.message === "Share not found") {
@@ -259,7 +267,14 @@ export class ShareController {
       const { alias } = request.params as { alias: string };
       const { password } = request.query as { password?: string };
 
-      const share = await this.shareService.getShareByAlias(alias, password);
+      let userId: string | undefined;
+      try {
+        await request.jwtVerify();
+        userId = (request as any).user?.userId;
+      } catch (err) {}
+
+      const { ipAddress, userAgent } = this.getClientInfo(request);
+      const share = await this.shareService.getShareByAlias(alias, password, userId, ipAddress, userAgent);
       return reply.send({ share });
     } catch (error: any) {
       if (error.message === "Share not found") {
@@ -291,6 +306,28 @@ export class ShareController {
       }
       if (error.message === "SMTP is not enabled") {
         return reply.status(400).send({ error: error.message });
+      }
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
+  async getShareActivity(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      await request.jwtVerify();
+      const userId = (request as any).user?.userId;
+      if (!userId) {
+        return reply.status(401).send({ error: "Unauthorized: a valid token is required to access this resource." });
+      }
+
+      const { shareId } = request.params as { shareId: string };
+      const activities = await this.shareService.getShareActivity(shareId, userId);
+      return reply.send({ activities });
+    } catch (error: any) {
+      if (error.message === "Share not found") {
+        return reply.status(404).send({ error: error.message });
+      }
+      if (error.message === "Unauthorized to access this share") {
+        return reply.status(401).send({ error: error.message });
       }
       return reply.status(400).send({ error: error.message });
     }

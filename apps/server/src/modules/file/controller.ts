@@ -11,6 +11,7 @@ import {
 import { getContentType } from "../../utils/mime-types";
 import { checkScanGate } from "../av-scan/gate";
 import { ConfigService } from "../config/service";
+import { ShareService } from "../share/service";
 import {
   CheckFileInput,
   CheckFileSchema,
@@ -28,6 +29,14 @@ import { FileService } from "./service";
 export class FileController {
   private fileService = new FileService();
   private configService = new ConfigService();
+  private shareService = new ShareService();
+
+  private getClientInfo(request: FastifyRequest) {
+    const realIP = request.headers["x-real-ip"] as string;
+    const ipAddress = realIP || request.ip || request.socket.remoteAddress || "";
+    const userAgent = (request.headers["user-agent"] as string) || "";
+    return { ipAddress, userAgent };
+  }
 
   async getPresignedUrl(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const { filename, extension } = request.query as { filename: string; extension: string };
@@ -214,7 +223,7 @@ export class FileController {
   private async hasShareAccess(
     fileRecord: { id: string; folderId: string | null },
     password?: string
-  ): Promise<boolean> {
+  ): Promise<{ granted: boolean; shareId: string | null }> {
     const directShares = await prisma.share.findMany({
       where: {
         files: {
@@ -229,8 +238,9 @@ export class FileController {
     });
 
     for (const share of directShares) {
-      if (!share.security.password) return true;
-      if (password && (await bcrypt.compare(password, share.security.password))) return true;
+      if (!share.security.password) return { granted: true, shareId: share.id };
+      if (password && (await bcrypt.compare(password, share.security.password)))
+        return { granted: true, shareId: share.id };
     }
 
     // Fall back to shares of an ancestor folder (folder shares don't
@@ -246,7 +256,7 @@ export class FileController {
       currentFolderId = folder?.parentId ?? null;
     }
 
-    if (ancestorFolderIds.length === 0) return false;
+    if (ancestorFolderIds.length === 0) return { granted: false, shareId: null };
 
     const folderShares = await prisma.share.findMany({
       where: {
@@ -262,11 +272,12 @@ export class FileController {
     });
 
     for (const share of folderShares) {
-      if (!share.security.password) return true;
-      if (password && (await bcrypt.compare(password, share.security.password))) return true;
+      if (!share.security.password) return { granted: true, shareId: share.id };
+      if (password && (await bcrypt.compare(password, share.security.password)))
+        return { granted: true, shareId: share.id };
     }
 
-    return false;
+    return { granted: false, shareId: null };
   }
 
   async getDownloadUrl(request: FastifyRequest, reply: FastifyReply) {
@@ -286,7 +297,7 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = await this.hasShareAccess(
+      const shareAccess = await this.hasShareAccess(
         fileRecord,
         password ||
           (Array.isArray(request.headers["x-share-password"])
@@ -294,17 +305,19 @@ export class FileController {
             : request.headers["x-share-password"])
       );
 
-      if (!hasAccess) {
-        try {
-          await request.jwtVerify();
-          const userId = (request as any).user?.userId;
-          if (userId && fileRecord.userId === userId) {
-            hasAccess = true;
-          }
-        } catch (err) {}
-      }
+      // Checked regardless of shareAccess so a share-activity event is never
+      // recorded for the file owner downloading their own file, even when it
+      // also happens to sit in a public (no-password) share they created.
+      let isOwner = false;
+      try {
+        await request.jwtVerify();
+        const userId = (request as any).user?.userId;
+        if (userId && fileRecord.userId === userId) {
+          isOwner = true;
+        }
+      } catch (err) {}
 
-      if (!hasAccess) {
+      if (!shareAccess.granted && !isOwner) {
         return reply.status(401).send({ error: "Unauthorized access to file." });
       }
 
@@ -324,6 +337,14 @@ export class FileController {
 
       // Always use presigned URLs (works for both internal and external storage)
       const url = await this.fileService.getPresignedGetUrl(objectName, expires, fileName);
+
+      if (shareAccess.granted && shareAccess.shareId && !isOwner) {
+        const { ipAddress, userAgent } = this.getClientInfo(request);
+        this.shareService
+          .recordDownload(shareAccess.shareId, fileRecord.id, ipAddress, userAgent)
+          .catch((err) => console.error("Failed to record share download activity:", err));
+      }
+
       return reply.send({ url, expiresIn: expires });
     } catch (error) {
       console.error("Error in getDownloadUrl:", error);
@@ -394,7 +415,7 @@ export class FileController {
         return reply.status(404).send({ error: "File not found." });
       }
 
-      let hasAccess = await this.hasShareAccess(
+      const shareAccess = await this.hasShareAccess(
         fileRecord,
         password ||
           (Array.isArray(request.headers["x-share-password"])
@@ -402,17 +423,19 @@ export class FileController {
             : request.headers["x-share-password"])
       );
 
-      if (!hasAccess) {
-        try {
-          await request.jwtVerify();
-          const userId = (request as any).user?.userId;
-          if (userId && fileRecord.userId === userId) {
-            hasAccess = true;
-          }
-        } catch (err) {}
-      }
+      // Checked regardless of shareAccess so a share-activity event is never
+      // recorded for the file owner downloading their own file, even when it
+      // also happens to sit in a public (no-password) share they created.
+      let isOwner = false;
+      try {
+        await request.jwtVerify();
+        const userId = (request as any).user?.userId;
+        if (userId && fileRecord.userId === userId) {
+          isOwner = true;
+        }
+      } catch (err) {}
 
-      if (!hasAccess) {
+      if (!shareAccess.granted && !isOwner) {
         return reply.status(401).send({ error: "Unauthorized access to file." });
       }
 
@@ -425,6 +448,13 @@ export class FileController {
               : "This file is still being scanned for malware. Please try again shortly.",
           code: scanGate.reason === "infected" ? "fileInfected" : "fileScanPending",
         });
+      }
+
+      if (shareAccess.granted && shareAccess.shareId && !isOwner) {
+        const { ipAddress, userAgent } = this.getClientInfo(request);
+        this.shareService
+          .recordDownload(shareAccess.shareId, fileRecord.id, ipAddress, userAgent)
+          .catch((err) => console.error("Failed to record share download activity:", err));
       }
 
       // Stream from S3/MinIO

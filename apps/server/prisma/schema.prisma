@@ -117,7 +117,28 @@ model Share {
 
   alias ShareAlias?
 
+  activities ShareActivity[]
+
   @@map("shares")
+}
+
+// Per-event audit log for share access: one row per page view or file
+// download against a share. Feeds both the creator-facing activity list
+// and the optional "someone downloaded your file" email notification.
+model ShareActivity {
+  id     String @id @default(cuid())
+  type   String // VIEW | DOWNLOAD
+  fileId String? // set for DOWNLOAD events; null for a whole-share VIEW
+
+  shareId String
+  share   Share  @relation(fields: [shareId], references: [id], onDelete: Cascade)
+
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([shareId, createdAt])
+  @@map("share_activities")
 }
 
 model ShareSecurity {

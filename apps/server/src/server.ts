@@ -17,6 +17,7 @@ import { inviteRoutes } from "./modules/invite/routes";
 import { reverseShareRoutes } from "./modules/reverse-share/routes";
 import { s3StorageRoutes } from "./modules/s3-storage/routes";
 import { shareRoutes } from "./modules/share/routes";
+import { ShareService } from "./modules/share/service";
 import { storageRoutes } from "./modules/storage/routes";
 import { twoFactorRoutes } from "./modules/two-factor/routes";
 import { userRoutes } from "./modules/user/routes";
@@ -95,6 +96,9 @@ async function startServer() {
 
   const authService = new AuthService();
   await authService.ensureDefaultConfigs();
+
+  const shareService = new ShareService();
+  await shareService.ensureDefaultConfigs();
 
   const expirationCleanupService = new ExpirationCleanupService();
   await expirationCleanupService.ensureDefaultConfigs();
