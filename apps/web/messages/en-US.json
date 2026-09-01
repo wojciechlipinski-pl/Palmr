@@ -1352,6 +1352,10 @@
         "title": "Minimum Password Length",
         "description": "Minimum number of characters for passwords"
       },
+      "passwordMaxAgeDays": {
+        "title": "Password Maximum Age (Days)",
+        "description": "Force users to change their password after this many days. Set to 0 to disable forced rotation."
+      },
       "passwordResetTokenExpiration": {
         "title": "Reset Token Expiration",
         "description": "Validity time (in seconds) for password reset token"
@@ -1788,6 +1792,18 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "expiredPassword": {
+    "title": "Password Expired",
+    "description": "Your password has expired and must be changed before you can continue.",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "submit": "Change Password",
+    "submitting": "Changing Password...",
+    "errors": {
+      "passwordsDoNotMatch": "New password and confirmation do not match"
+    }
   },
   "twoFactor": {
     "title": "Two-Factor Authentication",

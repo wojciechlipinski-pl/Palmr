@@ -37,6 +37,18 @@ export type ResetPasswordInput = BaseResetPasswordInput & {
   password: string;
 };
 
+export const createChangeExpiredPasswordSchema = async () => {
+  const minLength = Number(await configService.getValue("passwordMinLength"));
+  return z.object({
+    userId: z.string().min(1, "User ID is required").describe("User ID"),
+    currentPassword: z.string().min(1, "Current password is required").describe("Current password"),
+    newPassword: z
+      .string()
+      .min(minLength, `Password must be at least ${minLength} characters`)
+      .describe("New password"),
+  });
+};
+
 export const CompleteTwoFactorLoginSchema = z.object({
   userId: z.string().min(1, "User ID is required").describe("User ID"),
   token: z.string().min(6, "Two-factor authentication code must be at least 6 characters").describe("2FA token"),

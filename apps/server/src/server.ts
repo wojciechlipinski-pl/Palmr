@@ -7,6 +7,7 @@ import { directoriesConfig } from "./config/directories.config";
 import { appRoutes } from "./modules/app/routes";
 import { authProvidersRoutes } from "./modules/auth-providers/routes";
 import { authRoutes } from "./modules/auth/routes";
+import { AuthService } from "./modules/auth/service";
 import { AvScanService } from "./modules/av-scan/service";
 import { ExpirationCleanupService } from "./modules/expiration-cleanup/service";
 import { fileRoutes } from "./modules/file/routes";
@@ -91,6 +92,9 @@ async function startServer() {
   });
 
   console.log(`🌴 Palmr server running on port 3333`);
+
+  const authService = new AuthService();
+  await authService.ensureDefaultConfigs();
 
   const expirationCleanupService = new ExpirationCleanupService();
   await expirationCleanupService.ensureDefaultConfigs();

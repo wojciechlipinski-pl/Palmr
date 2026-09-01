@@ -1279,6 +1279,10 @@
         "title": "Minimalna długość hasła",
         "description": "Minimalna liczba znaków dla haseł"
       },
+      "passwordMaxAgeDays": {
+        "title": "Maksymalny wiek hasła (dni)",
+        "description": "Wymuś zmianę hasła przez użytkowników po tej liczbie dni. Ustaw 0, aby wyłączyć wymuszoną rotację."
+      },
       "passwordResetTokenExpiration": {
         "title": "Wygaśnięcie tokena resetowania",
         "description": "Czas ważności (w sekundach) tokena resetowania hasła"
@@ -1741,6 +1745,18 @@
     "light": "Jasny",
     "dark": "Ciemny",
     "system": "Systemowy"
+  },
+  "expiredPassword": {
+    "title": "Hasło wygasło",
+    "description": "Twoje hasło wygasło i musi zostać zmienione, aby móc kontynuować.",
+    "currentPassword": "Obecne hasło",
+    "newPassword": "Nowe hasło",
+    "confirmPassword": "Potwierdź nowe hasło",
+    "submit": "Zmień hasło",
+    "submitting": "Zmienianie hasła...",
+    "errors": {
+      "passwordsDoNotMatch": "Nowe hasło i potwierdzenie nie są zgodne"
+    }
   },
   "twoFactor": {
     "title": "Uwierzytelnianie dwuskładnikowe",

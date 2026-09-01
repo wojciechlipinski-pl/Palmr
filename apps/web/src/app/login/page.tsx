@@ -6,6 +6,7 @@ import { LanguageSwitcher } from "@/components/general/language-switcher";
 import { LoadingScreen } from "@/components/layout/loading-screen";
 import { DefaultFooter } from "@/components/ui/default-footer";
 import { useAppInfo } from "@/contexts/app-info-context";
+import { ChangeExpiredPassword } from "./components/change-expired-password";
 import { LoginForm } from "./components/login-form";
 import { LoginHeader } from "./components/login-header";
 import { RegisterForm } from "./components/register-form";
@@ -44,6 +45,12 @@ export default function LoginPage() {
                 twoFactorCode={login.twoFactorCode}
                 setTwoFactorCode={login.setTwoFactorCode}
                 onSubmit={login.onTwoFactorSubmit}
+                error={login.error}
+                isSubmitting={login.isSubmitting}
+              />
+            ) : login.requiresPasswordChange ? (
+              <ChangeExpiredPassword
+                onSubmit={login.onChangeExpiredPasswordSubmit}
                 error={login.error}
                 isSubmitting={login.isSubmitting}
               />

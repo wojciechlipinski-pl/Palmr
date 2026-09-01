@@ -63,6 +63,7 @@ export class UserService {
 
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
+      updateData.passwordChangedAt = new Date();
     }
 
     const user = await this.userRepository.updateUser({

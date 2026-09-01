@@ -126,6 +126,12 @@ const defaultConfigs = [
     type: "number",
     group: "security",
   },
+  {
+    key: "passwordMaxAgeDays",
+    value: "0", // 0 = disabled, no forced rotation
+    type: "number",
+    group: "security",
+  },
   // Email Configurations
   {
     key: "smtpEnabled",
