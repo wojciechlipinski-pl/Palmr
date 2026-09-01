@@ -500,6 +500,68 @@ export class FileController {
     }
   }
 
+  async listAllFiles(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const files = await prisma.file.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, username: true, email: true } },
+        },
+      });
+
+      const filesResponse = files.map((file) => ({
+        id: file.id,
+        name: file.name,
+        description: file.description,
+        extension: file.extension,
+        size: file.size.toString(),
+        objectName: file.objectName,
+        scanStatus: file.scanStatus,
+        folderId: file.folderId,
+        createdAt: file.createdAt,
+        updatedAt: file.updatedAt,
+        owner: {
+          id: file.user.id,
+          firstName: file.user.firstName,
+          lastName: file.user.lastName,
+          username: file.user.username,
+          email: file.user.email,
+        },
+      }));
+
+      return reply.send({ files: filesResponse });
+    } catch (error) {
+      console.error("Error in listAllFiles:", error);
+      return reply.status(500).send({ error: "Internal server error." });
+    }
+  }
+
+  async adminDeleteFile(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = request.params as { id: string };
+      if (!id) {
+        return reply.status(400).send({ error: "The 'id' parameter is required." });
+      }
+
+      const fileRecord = await prisma.file.findUnique({ where: { id } });
+      if (!fileRecord) {
+        return reply.status(404).send({ error: "File not found." });
+      }
+
+      // Admin-ness is already enforced by this route's preValidation, so unlike
+      // the regular deleteFile endpoint there is no ownership check here -
+      // that's the entire point of this endpoint (see kyantech/Palmr#200).
+      await this.fileService.deleteObject(fileRecord.objectName);
+
+      await prisma.file.delete({ where: { id } });
+
+      return reply.send({ message: "File deleted successfully." });
+    } catch (error) {
+      console.error("Error in adminDeleteFile:", error);
+      return reply.status(500).send({ error: "Internal server error." });
+    }
+  }
+
   async deleteFile(request: FastifyRequest, reply: FastifyReply) {
     try {
       await request.jwtVerify();
