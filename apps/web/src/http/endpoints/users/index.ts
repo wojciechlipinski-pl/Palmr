@@ -5,6 +5,8 @@ import type {
   ActivateUserResult,
   DeactivateUserResult,
   DeleteUserResult,
+  GetLoginAttemptsResult,
+  GetStorageStatsResult,
   GetUserByIdResult,
   ListUsersResult,
   RegisterUserBody,
@@ -35,6 +37,22 @@ export const registerUser = <TData = RegisterUserResult>(
  */
 export const listUsers = <TData = ListUsersResult>(options?: AxiosRequestConfig): Promise<TData> => {
   return apiInstance.get(`/api/users/list`, options);
+};
+
+/**
+ * Get per-user storage stats (admin only)
+ * @summary Get Storage Stats
+ */
+export const getStorageStats = <TData = GetStorageStatsResult>(options?: AxiosRequestConfig): Promise<TData> => {
+  return apiInstance.get(`/api/users/storage-stats`, options);
+};
+
+/**
+ * Get failed login attempts (admin only)
+ * @summary Get Login Attempts
+ */
+export const getLoginAttempts = <TData = GetLoginAttemptsResult>(options?: AxiosRequestConfig): Promise<TData> => {
+  return apiInstance.get(`/api/users/login-attempts`, options);
 };
 
 /**

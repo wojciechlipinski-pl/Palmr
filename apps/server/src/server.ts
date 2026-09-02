@@ -10,6 +10,7 @@ import { authRoutes } from "./modules/auth/routes";
 import { AuthService } from "./modules/auth/service";
 import { AvScanService } from "./modules/av-scan/service";
 import { ExpirationCleanupService } from "./modules/expiration-cleanup/service";
+import { FileController } from "./modules/file/controller";
 import { fileRoutes } from "./modules/file/routes";
 import { folderRoutes } from "./modules/folder/routes";
 import { healthRoutes } from "./modules/health/routes";
@@ -99,6 +100,9 @@ async function startServer() {
 
   const shareService = new ShareService();
   await shareService.ensureDefaultConfigs();
+
+  const fileController = new FileController();
+  await fileController.ensureDefaultConfigs();
 
   const expirationCleanupService = new ExpirationCleanupService();
   await expirationCleanupService.ensureDefaultConfigs();

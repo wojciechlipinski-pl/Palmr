@@ -125,6 +125,66 @@ export async function userRoutes(app: FastifyInstance) {
   );
 
   app.get(
+    "/users/storage-stats",
+    {
+      preValidation,
+      schema: {
+        tags: ["User"],
+        operationId: "getUserStorageStats",
+        summary: "Get Per-User Storage Stats",
+        description: "Returns storage usage broken down by user (admin only)",
+        response: {
+          200: z.object({
+            stats: z.array(
+              z.object({
+                userId: z.string().describe("User ID"),
+                username: z.string().describe("Username"),
+                email: z.string().describe("User email"),
+                firstName: z.string().describe("User first name"),
+                lastName: z.string().describe("User last name"),
+                totalSize: z.string().describe("Total bytes used by this user's files"),
+                fileCount: z.number().describe("Number of files owned by this user"),
+              })
+            ),
+          }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    userController.getStorageStats.bind(userController)
+  );
+
+  app.get(
+    "/users/login-attempts",
+    {
+      preValidation,
+      schema: {
+        tags: ["User"],
+        operationId: "getLoginAttempts",
+        summary: "Get Failed Login Attempts",
+        description: "Returns the failed-login audit trail (admin only) - only users with a recent failed attempt appear here",
+        response: {
+          200: z.object({
+            attempts: z.array(
+              z.object({
+                userId: z.string().describe("User ID"),
+                username: z.string().describe("Username"),
+                email: z.string().describe("User email"),
+                attempts: z.number().describe("Consecutive failed attempts"),
+                lastAttempt: z.string().describe("Timestamp of the last failed attempt"),
+              })
+            ),
+          }),
+          401: z.object({ error: z.string().describe("Error message") }),
+          403: z.object({ error: z.string().describe("Error message") }),
+        },
+      },
+    },
+    userController.getLoginAttempts.bind(userController)
+  );
+
+  app.get(
     "/users/:id",
     {
       preValidation,

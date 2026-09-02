@@ -38,6 +38,21 @@ export class FileController {
     return { ipAddress, userAgent };
   }
 
+  /**
+   * Makes sure the maxTotalStorageInstance configuration row exists, even on
+   * an installation that was already running before this feature shipped.
+   * Safe and idempotent to call on every boot.
+   */
+  async ensureDefaultConfigs() {
+    const existing = await prisma.appConfig.findUnique({ where: { key: "maxTotalStorageInstance" } });
+    if (!existing) {
+      await prisma.appConfig.create({
+        data: { key: "maxTotalStorageInstance", value: "0", type: "bigint", group: "storage" },
+      });
+      console.log("[File] Seeded missing configuration: maxTotalStorageInstance");
+    }
+  }
+
   async getPresignedUrl(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const { filename, extension } = request.query as { filename: string; extension: string };
 
@@ -97,6 +112,17 @@ export class FileController {
         return reply.status(400).send({
           error: `Insufficient storage space. You have ${availableSpace.toFixed(2)}MB available`,
         });
+      }
+
+      const maxTotalStorageInstance = BigInt(await this.configService.getValue("maxTotalStorageInstance"));
+      if (maxTotalStorageInstance > BigInt(0)) {
+        const instanceAgg = await prisma.file.aggregate({ _sum: { size: true } });
+        const instanceStorageUsed = instanceAgg._sum.size ?? BigInt(0);
+        if (instanceStorageUsed + BigInt(input.size) > maxTotalStorageInstance) {
+          return reply.status(400).send({
+            error: "The storage instance has reached its maximum capacity. Please contact an administrator.",
+          });
+        }
       }
 
       if (input.folderId) {
@@ -187,6 +213,18 @@ export class FileController {
           code: "insufficientStorage",
           details: availableSpace.toFixed(2),
         });
+      }
+
+      const maxTotalStorageInstance = BigInt(await this.configService.getValue("maxTotalStorageInstance"));
+      if (maxTotalStorageInstance > BigInt(0)) {
+        const instanceAgg = await prisma.file.aggregate({ _sum: { size: true } });
+        const instanceStorageUsed = instanceAgg._sum.size ?? BigInt(0);
+        if (instanceStorageUsed + BigInt(input.size) > maxTotalStorageInstance) {
+          return reply.status(400).send({
+            error: "The storage instance has reached its maximum capacity. Please contact an administrator.",
+            code: "instanceStorageFull",
+          });
+        }
       }
 
       // Check for duplicate filename and provide the suggested unique name

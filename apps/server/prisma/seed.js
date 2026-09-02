@@ -55,6 +55,12 @@ const defaultConfigs = [
     group: "storage",
   },
   {
+    key: "maxTotalStorageInstance",
+    value: "0", // 0 = disabled, no instance-wide cap
+    type: "bigint",
+    group: "storage",
+  },
+  {
     key: "shareAutoDeleteEnabled",
     value: "false",
     type: "boolean",

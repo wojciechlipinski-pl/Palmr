@@ -1296,6 +1296,10 @@
         "title": "Maksymalna pojemność na użytkownika",
         "description": "Całkowity limit pojemności na użytkownika"
       },
+      "maxTotalStorageInstance": {
+        "title": "Maksymalna pojemność (cała instancja)",
+        "description": "Łączny limit pojemności dla wszystkich użytkowników razem. Ustaw 0, aby wyłączyć."
+      },
       "shareAutoDeleteEnabled": {
         "title": "Automatyczne usuwanie wygasłych udostępnień",
         "description": "Automatycznie usuwaj udostępnienia (oraz ich pliki, jeśli nie są udostępnione gdzie indziej) po ich wygaśnięciu lub osiągnięciu limitu wyświetleń"
@@ -1983,6 +1987,21 @@
     }
   },
   "users": {
+    "security": {
+      "title": "Bezpieczeństwo",
+      "storageTab": "Zużycie pamięci",
+      "loginAttemptsTab": "Nieudane próby logowania",
+      "noStorageData": "Brak danych o pamięci",
+      "noLoginAttempts": "Brak zarejestrowanych nieudanych prób logowania",
+      "columns": {
+        "user": "Użytkownik",
+        "email": "E-mail",
+        "filesCount": "Pliki",
+        "storageUsed": "Użyta pamięć",
+        "attempts": "Próby",
+        "lastAttempt": "Ostatnia próba"
+      }
+    },
     "modes": {
       "create": "utwórz",
       "edit": "edytuj"
