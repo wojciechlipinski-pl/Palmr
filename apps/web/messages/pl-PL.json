@@ -455,7 +455,8 @@
   },
   "footer": {
     "poweredBy": "Zasilane przez",
-    "kyanHomepage": "Strona główna Kyantech"
+    "kyanHomepage": "Strona główna Kyantech",
+    "forkMaintainedBy": "Fork utrzymywany przez"
   },
   "forgotPassword": {
     "emailLabel": "Adres e-mail",

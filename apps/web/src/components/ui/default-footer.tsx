@@ -26,6 +26,16 @@ export function DefaultFooter() {
           <span className="text-default-600 text-xs sm:text-sm">{t("footer.poweredBy")}</span>
           <p className="text-primary text-xs sm:text-sm">Kyantech Solutions</p>
         </Link>
+        <div className="flex items-center gap-1 mt-0.5">
+          <span className="text-default-500 text-[11px]">{t("footer.forkMaintainedBy")}</span>
+          <Link
+            target="_blank"
+            href="https://www.linkedin.com/in/wojciech-lipi%C5%84ski-pl/"
+            className="text-primary text-[11px] hover:underline"
+          >
+            Wojciech Lipiński
+          </Link>
+        </div>
         {!shouldHideVersion && <span className="text-default-500 text-[11px] mt-1">v{version}</span>}
       </div>
     </footer>

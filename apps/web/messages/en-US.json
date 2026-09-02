@@ -459,7 +459,8 @@
   },
   "footer": {
     "poweredBy": "Powered by",
-    "kyanHomepage": "Kyantech homepage"
+    "kyanHomepage": "Kyantech homepage",
+    "forkMaintainedBy": "Fork maintained by"
   },
   "forgotPassword": {
     "emailLabel": "Email Address",
