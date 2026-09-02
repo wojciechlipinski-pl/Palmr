@@ -32,7 +32,7 @@ export function TransparentFooter() {
           <span className="text-white/70 text-[11px]">{t("footer.forkMaintainedBy")}</span>
           <Link
             target="_blank"
-            href="https://www.linkedin.com/in/wojciech-lipi%C5%84ski-pl/"
+            href="https://github.com/wojciechlipinski-pl"
             className="text-primary text-[11px] hover:underline"
           >
             Wojciech Lipiński
