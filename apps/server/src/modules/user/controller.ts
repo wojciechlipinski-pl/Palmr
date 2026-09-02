@@ -28,6 +28,24 @@ export class UserController {
     }
   }
 
+  async getStorageStats(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const stats = await this.userService.getStorageStats();
+      return reply.send({ stats });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
+  async getLoginAttempts(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const attempts = await this.userService.getLoginAttempts();
+      return reply.send({ attempts });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+
   async getUserById(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { id } = request.params as { id: string };

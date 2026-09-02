@@ -62,6 +62,29 @@ export type RegisterUser201 = UserWithMessageResponse;
 
 export type RegisterUserResult = AxiosResponse<RegisterUser201>;
 export type ListUsersResult = AxiosResponse<User[]>;
+
+export interface UserStorageStat {
+  userId: string;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  totalSize: string;
+  fileCount: number;
+}
+
+export interface LoginAttemptEntry {
+  userId: string;
+  username: string;
+  email: string;
+  attempts: number;
+  lastAttempt: string;
+}
+
+export type GetStorageStats200 = { stats: UserStorageStat[] };
+export type GetLoginAttempts200 = { attempts: LoginAttemptEntry[] };
+export type GetStorageStatsResult = AxiosResponse<GetStorageStats200>;
+export type GetLoginAttemptsResult = AxiosResponse<GetLoginAttempts200>;
 export type UpdateUserResult = AxiosResponse<UpdateUser200>;
 export type GetUserByIdResult = AxiosResponse<GetUserById200>;
 export type DeleteUserResult = AxiosResponse<DeleteUser200>;

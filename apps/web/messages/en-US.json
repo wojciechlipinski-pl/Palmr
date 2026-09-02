@@ -1369,6 +1369,10 @@
         "title": "Maximum Storage Per User",
         "description": "Total storage limit per user"
       },
+      "maxTotalStorageInstance": {
+        "title": "Maximum Storage (Whole Instance)",
+        "description": "Total storage limit shared across all users combined. Set to 0 to disable."
+      },
       "shareAutoDeleteEnabled": {
         "title": "Auto-Delete Expired Shares",
         "description": "Automatically delete shares (and their files, when not shared elsewhere) after they expire or reach their view limit"
@@ -2030,6 +2034,21 @@
     }
   },
   "users": {
+    "security": {
+      "title": "Security",
+      "storageTab": "Storage Usage",
+      "loginAttemptsTab": "Failed Login Attempts",
+      "noStorageData": "No storage data available",
+      "noLoginAttempts": "No failed login attempts recorded",
+      "columns": {
+        "user": "User",
+        "email": "Email",
+        "filesCount": "Files",
+        "storageUsed": "Storage Used",
+        "attempts": "Attempts",
+        "lastAttempt": "Last Attempt"
+      }
+    },
     "modes": {
       "create": "create",
       "edit": "edit"
