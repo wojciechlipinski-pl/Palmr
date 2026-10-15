@@ -29,6 +29,14 @@ export class ShareService {
       });
       console.log("[Share] Seeded missing configuration: shareDownloadNotificationEnabled");
     }
+
+    const requireExpiration = await prisma.appConfig.findUnique({ where: { key: "requireShareExpiration" } });
+    if (!requireExpiration) {
+      await prisma.appConfig.create({
+        data: { key: "requireShareExpiration", value: "false", type: "boolean", group: "storage" },
+      });
+      console.log("[Share] Seeded missing configuration: requireShareExpiration");
+    }
   }
 
   private async formatShareResponse(share: any) {
@@ -80,6 +88,12 @@ export class ShareService {
 
   async createShare(data: CreateShareInput, userId: string) {
     const { password, maxViews, files, folders, ...shareData } = data;
+
+    // Admin policy: every share must carry an expiration date so the existing
+    // auto-delete pipeline (grace period) can eventually reclaim its storage.
+    if ((await this.configService.getValue("requireShareExpiration")) === "true" && !shareData.expiration) {
+      throw new Error("An expiration date is required for every share");
+    }
 
     if (files && files.length > 0) {
       const existingFiles = await prisma.file.findMany({

@@ -177,6 +177,7 @@
     "success": "Share created successfully",
     "error": "Failed to create share",
     "errors": {
+      "expirationRequired": "Expiration date is required",
       "nameRequired": "Share name is required",
       "selectItems": "Please select at least one file or folder"
     },
@@ -1372,6 +1373,10 @@
       "maxTotalStorageInstance": {
         "title": "Maximum Storage (Whole Instance)",
         "description": "Total storage limit shared across all users combined. Set to 0 to disable."
+      },
+      "requireShareExpiration": {
+        "title": "Require Share Expiration Date",
+        "description": "When enabled, every new share must have an expiration date. Expired shares and their files are then removed automatically after the grace period, freeing storage."
       },
       "shareAutoDeleteEnabled": {
         "title": "Auto-Delete Expired Shares",

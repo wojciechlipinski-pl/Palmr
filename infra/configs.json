@@ -11,6 +11,7 @@
     "maxFileSize",
     "maxTotalStoragePerUser",
     "maxTotalStorageInstance",
+    "requireShareExpiration",
     "shareAutoDeleteEnabled",
     "shareAutoDeleteGraceDays",
     "avScanEnabled",

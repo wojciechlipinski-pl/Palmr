@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useSecureConfigValue } from "@/hooks/use-secure-configs";
 import { createShare } from "@/http/endpoints";
 
 interface CreateShareModalProps {
@@ -24,6 +25,8 @@ interface CreateShareModalProps {
 
 export function CreateShareModal({ isOpen, onClose, onSuccess, getAllFilesAndFolders }: CreateShareModalProps) {
   const t = useTranslations();
+  const { value: requireExpiration } = useSecureConfigValue("requireShareExpiration");
+  const isExpirationRequired = requireExpiration === "true";
   const [currentTab, setCurrentTab] = useState("details");
 
   const [formData, setFormData] = useState({
@@ -92,6 +95,12 @@ export function CreateShareModal({ isOpen, onClose, onSuccess, getAllFilesAndFol
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       toast.error(t("createShare.errors.nameRequired"));
+      return;
+    }
+
+    if (isExpirationRequired && !formData.expiresAt) {
+      toast.error(t("createShare.errors.expirationRequired"));
+      setCurrentTab("details");
       return;
     }
 
@@ -225,10 +234,12 @@ export function CreateShareModal({ isOpen, onClose, onSuccess, getAllFilesAndFol
                 <Label htmlFor="expiration" className="flex items-center gap-2">
                   <IconCalendar className="h-4 w-4" />
                   {t("createShare.expirationLabel")}
+                  {isExpirationRequired && <span className="text-destructive">*</span>}
                 </Label>
                 <Input
                   id="expiration"
                   type="datetime-local"
+                  required={isExpirationRequired}
                   value={formData.expiresAt}
                   onChange={(e) => updateFormData("expiresAt", e.target.value)}
                 />
