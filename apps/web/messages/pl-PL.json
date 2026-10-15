@@ -178,6 +178,7 @@
       "selectFiles": "Wybierz pliki"
     },
     "errors": {
+      "expirationRequired": "Data wygaśnięcia jest wymagana",
       "nameRequired": "Nazwa udostępnienia jest wymagana",
       "selectItems": "Wybierz co najmniej jeden plik lub folder"
     },
@@ -1299,6 +1300,10 @@
       "maxTotalStorageInstance": {
         "title": "Maksymalna pojemność (cała instancja)",
         "description": "Łączny limit pojemności dla wszystkich użytkowników razem. Ustaw 0, aby wyłączyć."
+      },
+      "requireShareExpiration": {
+        "title": "Wymagaj daty wygaśnięcia udostępnień",
+        "description": "Po włączeniu każde nowe udostępnienie musi mieć datę wygaśnięcia. Wygasłe udostępnienia i ich pliki są wtedy usuwane automatycznie po okresie karencji, co zwalnia miejsce."
       },
       "shareAutoDeleteEnabled": {
         "title": "Automatyczne usuwanie wygasłych udostępnień",

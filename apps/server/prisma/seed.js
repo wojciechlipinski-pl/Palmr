@@ -212,6 +212,12 @@ const defaultConfigs = [
     group: "email",
   },
   {
+    key: "requireShareExpiration",
+    value: "false",
+    type: "boolean",
+    group: "storage",
+  },
+  {
     key: "shareDownloadNotificationEnabled",
     value: "false",
     type: "boolean",
