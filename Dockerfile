@@ -1,3 +1,6 @@
+ARG MINIO_BINARIES_IMAGE=ghcr.io/wojciechlipinski-pl/palmr:db1c00a
+FROM ${MINIO_BINARIES_IMAGE} AS minio-binaries
+
 FROM node:24-alpine AS base
 
 # Install system dependencies
@@ -12,13 +15,14 @@ RUN apk add --no-cache \
 # Enable pnpm
 RUN corepack enable pnpm
 
-# Install storage system for S3-compatible storage
-COPY infra/install-minio.sh /tmp/install-minio.sh
-RUN chmod +x /tmp/install-minio.sh && /tmp/install-minio.sh
-
-# Install storage client (mc) for appropriate architecture
-COPY infra/install-mc.sh /tmp/install-mc.sh
-RUN chmod +x /tmp/install-mc.sh && /tmp/install-mc.sh
+# Storage system (S3-compatible server) and client (mc).
+# dl.min.io no longer serves these binaries (HTTP 410) and the official images
+# were removed from Docker Hub/Quay, so they are taken - pinned - from our own
+# previously published image. Override with --build-arg MINIO_BINARIES_IMAGE=...
+# The build fails loudly if the image is unreachable (no silent fallback).
+COPY --from=minio-binaries /usr/local/bin/minio /usr/local/bin/minio
+COPY --from=minio-binaries /usr/local/bin/mc /usr/local/bin/mc
+RUN /usr/local/bin/minio --version && /usr/local/bin/mc --version
 
 # Set working directory
 WORKDIR /app
